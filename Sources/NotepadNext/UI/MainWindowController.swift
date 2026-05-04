@@ -184,7 +184,22 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
                 }
             }
         }
+
+        // Save wrap state before endEditing triggers relayout
+        let wasWrapping = wordWrapEnabled
         ts.endEditing()
+
+        // Restore wrap state if it was on (endEditing can reset container)
+        if wasWrapping {
+            guard let container = textView.textContainer,
+                  let sv = textView.enclosingScrollView else { return }
+            let contentWidth = sv.contentSize.width
+            container.widthTracksTextView = true
+            container.containerSize = NSSize(width: contentWidth, height: CGFloat.greatestFiniteMagnitude)
+            textView.isHorizontallyResizable = false
+            textView.maxSize = NSSize(width: contentWidth, height: CGFloat.greatestFiniteMagnitude)
+            textView.frame.size.width = contentWidth
+        }
     }
 
     // MARK: - Panel Toggles
