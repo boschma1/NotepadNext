@@ -8,6 +8,7 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
     private var tabBarView: TabBarView!
     var textView: NSTextView!
     private var editorScrollView: NSScrollView!
+    private var lineNumberGutter: LineNumberGutter?
     private var statusBarView: StatusBarView!
     private var folderPanel: FolderWorkspacePanel?
     private var documentMap: DocumentMapView?
@@ -69,17 +70,20 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
 
         editorScrollView.documentView = textView
 
-        // Line number gutter
-        editorScrollView.rulersVisible = true
-        editorScrollView.hasVerticalRuler = true
-        editorScrollView.verticalRulerView = LineNumberGutter(scrollView: editorScrollView, textView: textView)
+        // Line number gutter (separate view, to the left of editor)
+        let gw = LineNumberGutter.gutterWidth
+        lineNumberGutter = LineNumberGutter(textView: textView, scrollView: editorScrollView)
+        lineNumberGutter!.frame = NSRect(x: 0, y: ey, width: gw, height: eh)
+        lineNumberGutter!.autoresizingMask = [.height, .maxXMargin]
+        cv.addSubview(lineNumberGutter!)
+
+        editorScrollView.frame = NSRect(x: gw, y: ey, width: b.width - gw, height: eh)
 
         cv.addSubview(editorScrollView)
 
         // Accessor for compatibility
         editorView = EditorViewAccessor(textView: textView)
         editorCommands = EditorCommands(textView: textView)
-        currentLineHighlighter = CurrentLineHighlighter(textView: textView)
         wordCompleter = WordCompleter(textView: textView)
 
         documentManager.delegate = self
@@ -139,11 +143,14 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         let b = cv.bounds
         let ey = statusBarHeight
         let eh = b.height - tabBarHeight - statusBarHeight
-        var leftX: CGFloat = 0
+        var leftX: CGFloat = LineNumberGutter.gutterWidth
         var rightInset: CGFloat = 0
         if let fp = folderPanel, !fp.isHidden {
             fp.frame = NSRect(x: 0, y: ey, width: folderPanelWidth, height: eh)
-            leftX = folderPanelWidth
+            leftX = folderPanelWidth + LineNumberGutter.gutterWidth
+            lineNumberGutter?.frame = NSRect(x: folderPanelWidth, y: ey, width: LineNumberGutter.gutterWidth, height: eh)
+        } else {
+            lineNumberGutter?.frame = NSRect(x: 0, y: ey, width: LineNumberGutter.gutterWidth, height: eh)
         }
         if let dm = documentMap, !dm.isHidden {
             dm.frame = NSRect(x: b.width - documentMapWidth, y: ey, width: documentMapWidth, height: eh)

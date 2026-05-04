@@ -1,48 +1,55 @@
 import AppKit
 
-/// Line number gutter drawn as an NSRulerView, using frame-based layout.
-class LineNumberGutter: NSRulerView {
+/// Line number view placed alongside the editor scroll view.
+/// Flipped coordinate system to match text view (top-down).
+class LineNumberGutter: NSView {
 
-    private weak var editorTextView: NSTextView?
-    private let gutterWidth: CGFloat = 44
+    private weak var textView: NSTextView?
+    private weak var scrollView: NSScrollView?
+    static let gutterWidth: CGFloat = 44
 
-    init(scrollView: NSScrollView, textView: NSTextView) {
-        self.editorTextView = textView
-        super.init(scrollView: scrollView, orientation: .verticalRuler)
-        self.clientView = textView
-        self.ruleThickness = gutterWidth
+    override var isFlipped: Bool { true }
+
+    init(textView: NSTextView, scrollView: NSScrollView) {
+        self.textView = textView
+        self.scrollView = scrollView
+        super.init(frame: .zero)
+        wantsLayer = true
 
         NotificationCenter.default.addObserver(self,
-            selector: #selector(textChanged), name: NSText.didChangeNotification, object: textView)
+            selector: #selector(needsRedraw), name: NSText.didChangeNotification, object: textView)
         NotificationCenter.default.addObserver(self,
-            selector: #selector(textChanged), name: NSView.boundsDidChangeNotification,
+            selector: #selector(needsRedraw), name: NSView.boundsDidChangeNotification,
+            object: scrollView.contentView)
+        NotificationCenter.default.addObserver(self,
+            selector: #selector(needsRedraw), name: NSView.frameDidChangeNotification,
             object: scrollView.contentView)
     }
 
-    required init(coder: NSCoder) { fatalError() }
+    required init?(coder: NSCoder) { fatalError() }
 
-    @objc private func textChanged(_ n: Notification) { needsDisplay = true }
+    @objc private func needsRedraw() { needsDisplay = true }
 
-    override func drawHashMarksAndLabels(in rect: NSRect) {
-        guard let tv = editorTextView,
-              let lm = tv.layoutManager,
-              let tc = tv.textContainer,
-              let sv = scrollView else { return }
+    override func draw(_ dirtyRect: NSRect) {
+        guard let tv = textView, let sv = scrollView,
+              let lm = tv.layoutManager, let tc = tv.textContainer else { return }
 
         // Background
         NSColor.controlBackgroundColor.setFill()
-        rect.fill()
+        bounds.fill()
 
-        // Separator line
+        // Right separator
         NSColor.separatorColor.setStroke()
-        let sepX = bounds.width - 0.5
-        NSBezierPath.strokeLine(from: NSPoint(x: sepX, y: rect.minY), to: NSPoint(x: sepX, y: rect.maxY))
+        NSBezierPath.strokeLine(from: NSPoint(x: bounds.width - 0.5, y: 0),
+                                to: NSPoint(x: bounds.width - 0.5, y: bounds.height))
 
         let visibleRect = sv.contentView.bounds
         let glyphRange = lm.glyphRange(forBoundingRect: visibleRect, in: tc)
         let charRange = lm.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
 
         let content = tv.string as NSString
+        guard content.length > 0 else { return }
+
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .regular),
             .foregroundColor: NSColor.secondaryLabelColor
@@ -51,20 +58,32 @@ class LineNumberGutter: NSRulerView {
         // Count lines before visible range
         var lineNum = 1
         if charRange.location > 0 {
-            content.enumerateSubstrings(in: NSRange(location: 0, length: charRange.location),
-                                        options: [.byLines, .substringNotRequired]) { _, _, _, _ in lineNum += 1 }
+            let before = content.substring(to: charRange.location)
+            lineNum = before.components(separatedBy: "\n").count
         }
 
         // Draw visible line numbers
-        content.enumerateSubstrings(in: charRange, options: [.byLines, .substringNotRequired]) {
-            _, substringRange, _, _ in
-            let gr = lm.glyphRange(forCharacterRange: substringRange, actualCharacterRange: nil)
-            let lineRect = lm.boundingRect(forGlyphRange: gr, in: tc)
-            let y = lineRect.minY - visibleRect.minY
-            let str = "\(lineNum)" as NSString
-            let sz = str.size(withAttributes: attrs)
-            str.draw(at: NSPoint(x: self.gutterWidth - sz.width - 6, y: y), withAttributes: attrs)
+        var index = charRange.location
+        while index < content.length && index <= NSMaxRange(charRange) {
+            let lineRange = content.lineRange(for: NSRange(location: index, length: 0))
+            let glyphs = lm.glyphRange(forCharacterRange: lineRange, actualCharacterRange: nil)
+
+            if glyphs.location != NSNotFound {
+                let lineRect = lm.boundingRect(forGlyphRange: glyphs, in: tc)
+                // y position relative to visible area (top-down since isFlipped)
+                let y = lineRect.minY - visibleRect.minY
+
+                if y >= -20 && y <= bounds.height + 20 {
+                    let str = "\(lineNum)" as NSString
+                    let sz = str.size(withAttributes: attrs)
+                    str.draw(at: NSPoint(x: bounds.width - sz.width - 6, y: y + 1), withAttributes: attrs)
+                }
+            }
+
             lineNum += 1
+            let next = NSMaxRange(lineRange)
+            if next <= index { break }
+            index = next
         }
     }
 }
