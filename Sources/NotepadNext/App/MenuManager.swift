@@ -119,6 +119,56 @@ class MenuManager {
                          action: #selector(NSText.selectAll(_:)),
                          keyEquivalent: "a")
 
+        editMenu.addItem(.separator())
+
+        // Line operations
+        let lineOpsMenu = NSMenu(title: "Line Operations")
+        lineOpsMenu.addItem(withTitle: "Duplicate Line",
+                            action: #selector(AppDelegate.duplicateLine(_:)),
+                            keyEquivalent: "d")
+        lineOpsMenu.addItem(withTitle: "Delete Line",
+                            action: #selector(AppDelegate.deleteLine(_:)),
+                            keyEquivalent: "L")
+        let moveUp = NSMenuItem(title: "Move Line Up",
+                                action: #selector(AppDelegate.moveLineUp(_:)),
+                                keyEquivalent: String(UnicodeScalar(NSUpArrowFunctionKey)!))
+        moveUp.keyEquivalentModifierMask = [.command, .shift]
+        lineOpsMenu.addItem(moveUp)
+        let moveDown = NSMenuItem(title: "Move Line Down",
+                                  action: #selector(AppDelegate.moveLineDown(_:)),
+                                  keyEquivalent: String(UnicodeScalar(NSDownArrowFunctionKey)!))
+        moveDown.keyEquivalentModifierMask = [.command, .shift]
+        lineOpsMenu.addItem(moveDown)
+
+        let lineOpsItem = NSMenuItem(title: "Line Operations", action: nil, keyEquivalent: "")
+        lineOpsItem.submenu = lineOpsMenu
+        editMenu.addItem(lineOpsItem)
+
+        // Case conversion
+        let caseMenu = NSMenu(title: "Convert Case")
+        caseMenu.addItem(withTitle: "UPPERCASE",
+                         action: #selector(AppDelegate.convertToUpperCase(_:)),
+                         keyEquivalent: "U")
+        caseMenu.addItem(withTitle: "lowercase",
+                         action: #selector(AppDelegate.convertToLowerCase(_:)),
+                         keyEquivalent: "u")
+        let caseItem = NSMenuItem(title: "Convert Case", action: nil, keyEquivalent: "")
+        caseItem.submenu = caseMenu
+        editMenu.addItem(caseItem)
+
+        editMenu.addItem(.separator())
+
+        let commentItem = NSMenuItem(title: "Toggle Comment",
+                                     action: #selector(AppDelegate.toggleComment(_:)),
+                                     keyEquivalent: "/")
+        editMenu.addItem(commentItem)
+
+        editMenu.addItem(.separator())
+
+        editMenu.addItem(withTitle: "Trim Trailing Whitespace",
+                         action: #selector(AppDelegate.trimTrailingWhitespace(_:)),
+                         keyEquivalent: "")
+
         editMenuItem.submenu = editMenu
         return editMenuItem
     }
@@ -130,18 +180,18 @@ class MenuManager {
         let searchMenu = NSMenu(title: "Search")
 
         searchMenu.addItem(withTitle: "Find…",
-                           action: #selector(NSTextView.performFindPanelAction(_:)),
+                           action: #selector(AppDelegate.showFindReplace(_:)),
                            keyEquivalent: "f")
 
         let replaceItem = NSMenuItem(title: "Replace…",
-                                     action: nil,
+                                     action: #selector(AppDelegate.showFindReplace(_:)),
                                      keyEquivalent: "h")
         searchMenu.addItem(replaceItem)
 
         searchMenu.addItem(.separator())
 
         let goToItem = NSMenuItem(title: "Go to Line…",
-                                  action: nil,
+                                  action: #selector(AppDelegate.showGoToLine(_:)),
                                   keyEquivalent: "g")
         searchMenu.addItem(goToItem)
 

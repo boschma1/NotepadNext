@@ -3,11 +3,14 @@ import AppKit
 class MainWindowController: NSWindowController {
 
     let documentManager = DocumentManager()
+    private(set) var editorCommands: EditorCommands?
 
     private var tabBarView: TabBarView!
     private var editorView: EditorView!
     private var statusBarView: StatusBarView!
     private var contentView: NSView!
+    private var findReplaceController: FindReplaceWindowController?
+    private var goToLineController: GoToLineWindowController?
 
     convenience init() {
         let window = NSWindow(
@@ -48,6 +51,7 @@ class MainWindowController: NSWindowController {
         editorView = EditorView()
         editorView.translatesAutoresizingMaskIntoConstraints = false
         editorView.delegate = self
+        editorCommands = EditorCommands(textView: editorView.textView)
         contentView.addSubview(editorView)
 
         // Status bar
@@ -114,6 +118,20 @@ class MainWindowController: NSWindowController {
         let index = documentManager.activeIndex
         guard index >= 0 else { return }
         _ = documentManager.closeDocument(at: index)
+    }
+
+    func showFindReplace() {
+        if findReplaceController == nil {
+            findReplaceController = FindReplaceWindowController(textView: editorView.textView)
+        }
+        findReplaceController?.showAndFocus()
+    }
+
+    func showGoToLine() {
+        if goToLineController == nil {
+            goToLineController = GoToLineWindowController(textView: editorView.textView)
+        }
+        goToLineController?.showAndFocus()
     }
 
     // MARK: - Helpers

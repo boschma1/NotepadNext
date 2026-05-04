@@ -56,4 +56,48 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func closeTab(_ sender: Any?) {
         mainWindowController?.closeCurrentTab()
     }
+
+    // MARK: - Edit actions
+
+    @objc func duplicateLine(_ sender: Any?) {
+        mainWindowController?.editorCommands?.duplicateLine()
+    }
+
+    @objc func deleteLine(_ sender: Any?) {
+        mainWindowController?.editorCommands?.deleteLine()
+    }
+
+    @objc func moveLineUp(_ sender: Any?) {
+        mainWindowController?.editorCommands?.moveLineUp()
+    }
+
+    @objc func moveLineDown(_ sender: Any?) {
+        mainWindowController?.editorCommands?.moveLineDown()
+    }
+
+    @objc func convertToUpperCase(_ sender: Any?) {
+        mainWindowController?.editorCommands?.convertToUpperCase()
+    }
+
+    @objc func convertToLowerCase(_ sender: Any?) {
+        mainWindowController?.editorCommands?.convertToLowerCase()
+    }
+
+    @objc func toggleComment(_ sender: Any?) {
+        mainWindowController?.editorCommands?.toggleLineComment()
+    }
+
+    @objc func trimTrailingWhitespace(_ sender: Any?) {
+        mainWindowController?.editorCommands?.trimTrailingWhitespace()
+    }
+
+    // MARK: - Search actions
+
+    @objc func showFindReplace(_ sender: Any?) {
+        mainWindowController?.showFindReplace()
+    }
+
+    @objc func showGoToLine(_ sender: Any?) {
+        mainWindowController?.showGoToLine()
+    }
 }
