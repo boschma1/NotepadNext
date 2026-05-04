@@ -107,4 +107,40 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let language = sender.representedObject as? String else { return }
         mainWindowController?.setLanguage(language)
     }
+
+    // MARK: - Encoding actions
+
+    @objc func setEncoding(_ sender: NSMenuItem) {
+        // Reinterpret bytes (for now, just update the label)
+        guard let encodingId = sender.representedObject as? String else { return }
+        mainWindowController?.setEncodingLabel(encodingId)
+    }
+
+    @objc func convertEncoding(_ sender: NSMenuItem) {
+        guard let encodingId = sender.representedObject as? String else { return }
+        mainWindowController?.convertEncoding(to: encodingId)
+    }
+
+    @objc func setLineEnding(_ sender: NSMenuItem) {
+        guard let ending = sender.representedObject as? String else { return }
+        mainWindowController?.setLineEnding(ending)
+    }
+
+    // MARK: - View actions
+
+    @objc func zoomIn(_ sender: Any?) {
+        mainWindowController?.zoom(delta: 1)
+    }
+
+    @objc func zoomOut(_ sender: Any?) {
+        mainWindowController?.zoom(delta: -1)
+    }
+
+    @objc func zoomReset(_ sender: Any?) {
+        mainWindowController?.zoomReset()
+    }
+
+    @objc func toggleWordWrap(_ sender: Any?) {
+        mainWindowController?.toggleWordWrap()
+    }
 }

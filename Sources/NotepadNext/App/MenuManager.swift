@@ -10,6 +10,7 @@ class MenuManager {
         mainMenu.addItem(createEditMenu())
         mainMenu.addItem(createSearchMenu())
         mainMenu.addItem(createViewMenu())
+        mainMenu.addItem(createEncodingMenu())
         mainMenu.addItem(createLanguageMenu())
         mainMenu.addItem(createWindowMenu())
         mainMenu.addItem(createHelpMenu())
@@ -214,27 +215,80 @@ class MenuManager {
                          keyEquivalent: "")
         viewMenu.addItem(.separator())
         viewMenu.addItem(withTitle: "Word Wrap",
-                         action: nil,
+                         action: #selector(AppDelegate.toggleWordWrap(_:)),
                          keyEquivalent: "")
         viewMenu.addItem(.separator())
 
         let zoomIn = NSMenuItem(title: "Zoom In",
-                                action: nil,
+                                action: #selector(AppDelegate.zoomIn(_:)),
                                 keyEquivalent: "+")
         viewMenu.addItem(zoomIn)
 
         let zoomOut = NSMenuItem(title: "Zoom Out",
-                                 action: nil,
+                                 action: #selector(AppDelegate.zoomOut(_:)),
                                  keyEquivalent: "-")
         viewMenu.addItem(zoomOut)
 
         let zoomReset = NSMenuItem(title: "Reset Zoom",
-                                   action: nil,
+                                   action: #selector(AppDelegate.zoomReset(_:)),
                                    keyEquivalent: "0")
         viewMenu.addItem(zoomReset)
 
         viewMenuItem.submenu = viewMenu
         return viewMenuItem
+    }
+
+    // MARK: - Encoding Menu
+
+    private func createEncodingMenu() -> NSMenuItem {
+        let encMenuItem = NSMenuItem()
+        let encMenu = NSMenu(title: "Encoding")
+
+        let encodings: [(String, String)] = [
+            ("UTF-8", "utf8"),
+            ("UTF-8 with BOM", "utf8bom"),
+            ("UTF-16 LE", "utf16le"),
+            ("UTF-16 BE", "utf16be"),
+            ("ASCII", "ascii"),
+            ("ISO 8859-1 (Latin 1)", "isoLatin1"),
+            ("Windows-1252", "windowsCP1252"),
+            ("Mac OS Roman", "macOSRoman"),
+        ]
+
+        for (title, id) in encodings {
+            let item = NSMenuItem(title: title, action: #selector(AppDelegate.setEncoding(_:)), keyEquivalent: "")
+            item.representedObject = id
+            encMenu.addItem(item)
+        }
+
+        encMenu.addItem(.separator())
+
+        let convertMenu = NSMenu(title: "Convert to")
+        for (title, id) in encodings {
+            let item = NSMenuItem(title: "Convert to \(title)",
+                                  action: #selector(AppDelegate.convertEncoding(_:)),
+                                  keyEquivalent: "")
+            item.representedObject = id
+            convertMenu.addItem(item)
+        }
+        let convertItem = NSMenuItem(title: "Convert to…", action: nil, keyEquivalent: "")
+        convertItem.submenu = convertMenu
+        encMenu.addItem(convertItem)
+
+        encMenu.addItem(.separator())
+
+        let lineEndingMenu = NSMenu(title: "Line Endings")
+        for (title, id) in [("Unix (LF)", "LF"), ("Windows (CRLF)", "CRLF"), ("Classic Mac (CR)", "CR")] {
+            let item = NSMenuItem(title: title, action: #selector(AppDelegate.setLineEnding(_:)), keyEquivalent: "")
+            item.representedObject = id
+            lineEndingMenu.addItem(item)
+        }
+        let lineEndingItem = NSMenuItem(title: "Line Endings", action: nil, keyEquivalent: "")
+        lineEndingItem.submenu = lineEndingMenu
+        encMenu.addItem(lineEndingItem)
+
+        encMenuItem.submenu = encMenu
+        return encMenuItem
     }
 
     // MARK: - Language Menu

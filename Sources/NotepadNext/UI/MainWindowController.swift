@@ -149,6 +149,83 @@ class MainWindowController: NSWindowController {
         }
     }
 
+    // MARK: - Zoom
+
+    private var currentFontSize: CGFloat = 13
+
+    func zoom(delta: Int) {
+        currentFontSize = max(6, min(72, currentFontSize + CGFloat(delta)))
+        editorView.textView.font = NSFont.monospacedSystemFont(ofSize: currentFontSize, weight: .regular)
+    }
+
+    func zoomReset() {
+        currentFontSize = 13
+        editorView.textView.font = NSFont.monospacedSystemFont(ofSize: currentFontSize, weight: .regular)
+    }
+
+    // MARK: - Word Wrap
+
+    private var wordWrapEnabled = false
+
+    func toggleWordWrap() {
+        wordWrapEnabled.toggle()
+        if wordWrapEnabled {
+            editorView.textView.textContainer?.widthTracksTextView = true
+            editorView.textView.isHorizontallyResizable = false
+            if let scrollView = editorView.textView.enclosingScrollView {
+                editorView.textView.textContainer?.containerSize = NSSize(
+                    width: scrollView.contentSize.width,
+                    height: CGFloat.greatestFiniteMagnitude
+                )
+            }
+        } else {
+            editorView.textView.textContainer?.widthTracksTextView = false
+            editorView.textView.isHorizontallyResizable = true
+            editorView.textView.textContainer?.containerSize = NSSize(
+                width: CGFloat.greatestFiniteMagnitude,
+                height: CGFloat.greatestFiniteMagnitude
+            )
+        }
+    }
+
+    // MARK: - Encoding
+
+    func setEncodingLabel(_ encodingId: String) {
+        guard let doc = documentManager.activeDocument else { return }
+        doc.encoding = encodingFromId(encodingId)
+        updateStatusBar(for: doc)
+    }
+
+    func convertEncoding(to encodingId: String) {
+        guard let doc = documentManager.activeDocument else { return }
+        doc.encoding = encodingFromId(encodingId)
+        updateStatusBar(for: doc)
+    }
+
+    func setLineEnding(_ ending: String) {
+        guard let doc = documentManager.activeDocument else { return }
+        switch ending {
+        case "LF": doc.lineEnding = .unix
+        case "CRLF": doc.lineEnding = .windows
+        case "CR": doc.lineEnding = .classic
+        default: break
+        }
+        updateStatusBar(for: doc)
+    }
+
+    private func encodingFromId(_ id: String) -> String.Encoding {
+        switch id {
+        case "utf8", "utf8bom": return .utf8
+        case "utf16le": return .utf16LittleEndian
+        case "utf16be": return .utf16BigEndian
+        case "ascii": return .ascii
+        case "isoLatin1": return .isoLatin1
+        case "windowsCP1252": return .windowsCP1252
+        case "macOSRoman": return .macOSRoman
+        default: return .utf8
+        }
+    }
+
     // MARK: - Helpers
 
     private func loadDocumentIntoEditor(_ doc: Document) {
