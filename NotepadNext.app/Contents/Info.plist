@@ -9,9 +9,9 @@
     <key>CFBundleIdentifier</key>
     <string>com.notepadnext.app</string>
     <key>CFBundleVersion</key>
-    <string>0.1.0</string>
+    <string>1.0.0</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.1.0</string>
+    <string>1.0.0</string>
     <key>CFBundleExecutable</key>
     <string>NotepadNext</string>
     <key>CFBundleIconFile</key>
@@ -28,5 +28,167 @@
     <false/>
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.developer-tools</string>
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleTypeName</key>
+            <string>Text Document</string>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+                <string>txt</string>
+                <string>text</string>
+                <string>md</string>
+                <string>markdown</string>
+                <string>log</string>
+                <string>cfg</string>
+                <string>conf</string>
+                <string>ini</string>
+                <string>csv</string>
+                <string>tsv</string>
+                <string>rtf</string>
+            </array>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.plain-text</string>
+                <string>public.utf8-plain-text</string>
+                <string>public.text</string>
+            </array>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+        </dict>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleTypeName</key>
+            <string>Source Code</string>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+                <string>swift</string>
+                <string>py</string>
+                <string>js</string>
+                <string>ts</string>
+                <string>jsx</string>
+                <string>tsx</string>
+                <string>c</string>
+                <string>h</string>
+                <string>cpp</string>
+                <string>hpp</string>
+                <string>cc</string>
+                <string>m</string>
+                <string>mm</string>
+                <string>cs</string>
+                <string>java</string>
+                <string>kt</string>
+                <string>go</string>
+                <string>rs</string>
+                <string>rb</string>
+                <string>php</string>
+                <string>pl</string>
+                <string>pm</string>
+                <string>r</string>
+                <string>lua</string>
+                <string>dart</string>
+                <string>scala</string>
+                <string>groovy</string>
+            </array>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.source-code</string>
+            </array>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+        </dict>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleTypeName</key>
+            <string>Web Document</string>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+                <string>html</string>
+                <string>htm</string>
+                <string>css</string>
+                <string>scss</string>
+                <string>less</string>
+                <string>svg</string>
+            </array>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.html</string>
+                <string>public.xhtml</string>
+            </array>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+        </dict>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleTypeName</key>
+            <string>Data File</string>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+                <string>json</string>
+                <string>xml</string>
+                <string>yaml</string>
+                <string>yml</string>
+                <string>toml</string>
+                <string>plist</string>
+                <string>sql</string>
+                <string>graphql</string>
+            </array>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.json</string>
+                <string>public.xml</string>
+                <string>public.yaml</string>
+            </array>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+        </dict>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleTypeName</key>
+            <string>Shell Script</string>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+                <string>sh</string>
+                <string>bash</string>
+                <string>zsh</string>
+                <string>fish</string>
+                <string>bat</string>
+                <string>cmd</string>
+                <string>ps1</string>
+            </array>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.shell-script</string>
+                <string>public.script</string>
+            </array>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+        </dict>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleTypeName</key>
+            <string>Config File</string>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+                <string>env</string>
+                <string>gitignore</string>
+                <string>dockerignore</string>
+                <string>editorconfig</string>
+                <string>properties</string>
+                <string>makefile</string>
+                <string>cmake</string>
+                <string>gradle</string>
+            </array>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+        </dict>
+    </array>
 </dict>
 </plist>
