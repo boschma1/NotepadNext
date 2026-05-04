@@ -137,6 +137,7 @@ class MainWindowController: NSWindowController {
     // MARK: - Helpers
 
     private func loadDocumentIntoEditor(_ doc: Document) {
+        editorView.language = doc.language
         editorView.text = doc.content
         updateStatusBar(for: doc)
         let title = doc.fileURL?.path ?? doc.title

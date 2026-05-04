@@ -6,8 +6,14 @@ class EditorView: NSView {
 
     private(set) var textView: NSTextView!
     private var scrollView: NSScrollView!
+    private let syntaxHighlighter = SyntaxHighlighter()
 
     weak var delegate: EditorViewDelegate?
+
+    var language: String {
+        get { syntaxHighlighter.language }
+        set { syntaxHighlighter.language = newValue }
+    }
 
     var text: String {
         get { textView.string }
@@ -58,6 +64,9 @@ class EditorView: NSView {
                                    height: CGFloat.greatestFiniteMagnitude)
 
         scrollView.documentView = textView
+
+        // Attach syntax highlighter
+        textView.textStorage?.delegate = syntaxHighlighter
 
         // Line numbers (via ruler) — must be after documentView is set
         scrollView.rulersVisible = true
