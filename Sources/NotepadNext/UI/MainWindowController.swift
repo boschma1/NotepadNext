@@ -455,12 +455,20 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
 
     func zoom(delta: Int) {
         currentFontSize = max(6, min(72, currentFontSize + CGFloat(delta)))
-        textView.font = NSFont.monospacedSystemFont(ofSize: currentFontSize, weight: .regular)
+        let currentFont = ThemeManager.shared.currentTheme.editorFont
+        let newFont = NSFontManager.shared.convert(currentFont, toSize: currentFontSize)
+        textView.font = newFont
+        ThemeManager.shared.currentTheme.editorFont = newFont
+        scheduleHighlighting()
     }
 
     func zoomReset() {
         currentFontSize = 13
-        textView.font = NSFont.monospacedSystemFont(ofSize: currentFontSize, weight: .regular)
+        let currentFont = ThemeManager.shared.currentTheme.editorFont
+        let newFont = NSFontManager.shared.convert(currentFont, toSize: currentFontSize)
+        textView.font = newFont
+        ThemeManager.shared.currentTheme.editorFont = newFont
+        scheduleHighlighting()
     }
 
     // MARK: - Word Wrap
