@@ -504,17 +504,26 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
 
     func toggleWordWrap() {
         wordWrapEnabled.toggle()
+        guard let container = textView.textContainer,
+              let sv = textView.enclosingScrollView else { return }
+
         if wordWrapEnabled {
-            textView.textContainer?.widthTracksTextView = true
+            let contentWidth = sv.contentSize.width
+            container.widthTracksTextView = true
+            container.containerSize = NSSize(width: contentWidth, height: CGFloat.greatestFiniteMagnitude)
             textView.isHorizontallyResizable = false
-            if let sv = textView.enclosingScrollView {
-                textView.textContainer?.containerSize = NSSize(width: sv.contentSize.width, height: CGFloat.greatestFiniteMagnitude)
-            }
+            textView.autoresizingMask = [.width]
+            textView.maxSize = NSSize(width: contentWidth, height: CGFloat.greatestFiniteMagnitude)
+            textView.frame.size.width = contentWidth
         } else {
-            textView.textContainer?.widthTracksTextView = false
+            container.widthTracksTextView = false
+            container.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
             textView.isHorizontallyResizable = true
-            textView.textContainer?.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+            textView.autoresizingMask = [.width]
+            textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         }
+        textView.needsLayout = true
+        textView.needsDisplay = true
     }
 
     // MARK: - Encoding
