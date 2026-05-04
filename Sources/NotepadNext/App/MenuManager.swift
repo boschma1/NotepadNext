@@ -10,6 +10,7 @@ class MenuManager {
         mainMenu.addItem(createEditMenu())
         mainMenu.addItem(createSearchMenu())
         mainMenu.addItem(createViewMenu())
+        mainMenu.addItem(createLanguageMenu())
         mainMenu.addItem(createWindowMenu())
         mainMenu.addItem(createHelpMenu())
 
@@ -234,6 +235,35 @@ class MenuManager {
 
         viewMenuItem.submenu = viewMenu
         return viewMenuItem
+    }
+
+    // MARK: - Language Menu
+
+    private func createLanguageMenu() -> NSMenuItem {
+        let langMenuItem = NSMenuItem()
+        let langMenu = NSMenu(title: "Language")
+
+        let languages: [(String, [String])] = [
+            ("Common", ["Normal Text", "C", "C++", "C#", "CSS", "Go", "HTML", "Java",
+                        "JavaScript", "JSON", "Markdown", "Objective-C", "PHP", "Python",
+                        "Ruby", "Rust", "Shell", "SQL", "Swift", "TypeScript", "XML", "YAML"]),
+        ]
+
+        for (group, langs) in languages {
+            if langMenu.items.count > 0 {
+                langMenu.addItem(.separator())
+            }
+            for lang in langs {
+                let item = NSMenuItem(title: lang,
+                                      action: #selector(AppDelegate.setLanguage(_:)),
+                                      keyEquivalent: "")
+                item.representedObject = lang
+                langMenu.addItem(item)
+            }
+        }
+
+        langMenuItem.submenu = langMenu
+        return langMenuItem
     }
 
     // MARK: - Window Menu

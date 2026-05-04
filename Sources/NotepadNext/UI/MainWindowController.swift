@@ -134,6 +134,21 @@ class MainWindowController: NSWindowController {
         goToLineController?.showAndFocus()
     }
 
+    func setLanguage(_ language: String) {
+        guard let doc = documentManager.activeDocument else { return }
+        doc.language = language
+        editorView.language = language
+        // Re-highlight by triggering a text storage edit
+        if let ts = editorView.textView.textStorage {
+            ts.beginEditing()
+            ts.endEditing()
+        }
+        updateStatusBar(for: doc)
+        if let index = documentManager.documents.firstIndex(where: { $0.id == doc.id }) {
+            documentManager.delegate?.documentManager(documentManager, didUpdateDocument: doc, at: index)
+        }
+    }
+
     // MARK: - Helpers
 
     private func loadDocumentIntoEditor(_ doc: Document) {

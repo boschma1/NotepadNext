@@ -100,4 +100,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func showGoToLine(_ sender: Any?) {
         mainWindowController?.showGoToLine()
     }
+
+    // MARK: - Language actions
+
+    @objc func setLanguage(_ sender: NSMenuItem) {
+        guard let language = sender.representedObject as? String else { return }
+        mainWindowController?.setLanguage(language)
+    }
 }
