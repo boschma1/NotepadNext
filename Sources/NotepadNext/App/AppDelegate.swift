@@ -2,145 +2,77 @@ import AppKit
 
 class AppDelegate: NSObject, NSApplicationDelegate {
 
-    private var mainWindowController: MainWindowController?
+    var window: NSWindow!
+    var mainController: MainWindowController!
     private var menuManager: MenuManager?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         menuManager = MenuManager()
         menuManager?.setupMainMenu()
 
-        mainWindowController = MainWindowController()
-        mainWindowController?.showWindow(nil)
+        window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 900, height: 600),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "NotepadNext"
+        window.center()
+        window.isReleasedWhenClosed = false
+        window.minSize = NSSize(width: 400, height: 300)
 
+        mainController = MainWindowController(window: window)
+        mainController.setupContent()
+
+        window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        return true
-    }
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
+    func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool { true }
 
-    func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
-        return true
-    }
-
-    // MARK: - File actions called from menu
-
-    @objc func newDocument(_ sender: Any?) {
-        mainWindowController?.documentManager.createNewDocument()
-    }
-
+    @objc func newDocument(_ sender: Any?) { mainController.documentManager.createNewDocument() }
     @objc func openDocument(_ sender: Any?) {
-        guard let window = mainWindowController?.window else { return }
-
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
-
         panel.beginSheetModal(for: window) { [weak self] response in
             guard response == .OK else { return }
-            for url in panel.urls {
-                self?.mainWindowController?.documentManager.openDocument(at: url)
-            }
+            for url in panel.urls { self?.mainController.documentManager.openDocument(at: url) }
         }
     }
-
-    @objc func saveDocument(_ sender: Any?) {
-        mainWindowController?.saveCurrentDocument()
-    }
-
-    @objc func saveDocumentAs(_ sender: Any?) {
-        mainWindowController?.saveCurrentDocumentAs()
-    }
-
-    @objc func closeTab(_ sender: Any?) {
-        mainWindowController?.closeCurrentTab()
-    }
-
-    // MARK: - Edit actions
-
-    @objc func duplicateLine(_ sender: Any?) {
-        mainWindowController?.editorCommands?.duplicateLine()
-    }
-
-    @objc func deleteLine(_ sender: Any?) {
-        mainWindowController?.editorCommands?.deleteLine()
-    }
-
-    @objc func moveLineUp(_ sender: Any?) {
-        mainWindowController?.editorCommands?.moveLineUp()
-    }
-
-    @objc func moveLineDown(_ sender: Any?) {
-        mainWindowController?.editorCommands?.moveLineDown()
-    }
-
-    @objc func convertToUpperCase(_ sender: Any?) {
-        mainWindowController?.editorCommands?.convertToUpperCase()
-    }
-
-    @objc func convertToLowerCase(_ sender: Any?) {
-        mainWindowController?.editorCommands?.convertToLowerCase()
-    }
-
-    @objc func toggleComment(_ sender: Any?) {
-        mainWindowController?.editorCommands?.toggleLineComment()
-    }
-
-    @objc func trimTrailingWhitespace(_ sender: Any?) {
-        mainWindowController?.editorCommands?.trimTrailingWhitespace()
-    }
-
-    // MARK: - Search actions
-
-    @objc func showFindReplace(_ sender: Any?) {
-        mainWindowController?.showFindReplace()
-    }
-
-    @objc func showGoToLine(_ sender: Any?) {
-        mainWindowController?.showGoToLine()
-    }
-
-    // MARK: - Language actions
-
+    @objc func saveDocument(_ sender: Any?) { mainController.saveCurrentDocument() }
+    @objc func saveDocumentAs(_ sender: Any?) { mainController.saveCurrentDocumentAs() }
+    @objc func closeTab(_ sender: Any?) { mainController.closeCurrentTab() }
+    @objc func duplicateLine(_ sender: Any?) { mainController.editorCommands?.duplicateLine() }
+    @objc func deleteLine(_ sender: Any?) { mainController.editorCommands?.deleteLine() }
+    @objc func moveLineUp(_ sender: Any?) { mainController.editorCommands?.moveLineUp() }
+    @objc func moveLineDown(_ sender: Any?) { mainController.editorCommands?.moveLineDown() }
+    @objc func convertToUpperCase(_ sender: Any?) { mainController.editorCommands?.convertToUpperCase() }
+    @objc func convertToLowerCase(_ sender: Any?) { mainController.editorCommands?.convertToLowerCase() }
+    @objc func toggleComment(_ sender: Any?) { mainController.editorCommands?.toggleLineComment() }
+    @objc func trimTrailingWhitespace(_ sender: Any?) { mainController.editorCommands?.trimTrailingWhitespace() }
+    @objc func showFindReplace(_ sender: Any?) { mainController.showFindReplace() }
+    @objc func showGoToLine(_ sender: Any?) { mainController.showGoToLine() }
     @objc func setLanguage(_ sender: NSMenuItem) {
         guard let language = sender.representedObject as? String else { return }
-        mainWindowController?.setLanguage(language)
+        mainController.setLanguage(language)
     }
-
-    // MARK: - Encoding actions
-
     @objc func setEncoding(_ sender: NSMenuItem) {
-        // Reinterpret bytes (for now, just update the label)
-        guard let encodingId = sender.representedObject as? String else { return }
-        mainWindowController?.setEncodingLabel(encodingId)
+        guard let id = sender.representedObject as? String else { return }
+        mainController.setEncodingLabel(id)
     }
-
     @objc func convertEncoding(_ sender: NSMenuItem) {
-        guard let encodingId = sender.representedObject as? String else { return }
-        mainWindowController?.convertEncoding(to: encodingId)
+        guard let id = sender.representedObject as? String else { return }
+        mainController.convertEncoding(to: id)
     }
-
     @objc func setLineEnding(_ sender: NSMenuItem) {
         guard let ending = sender.representedObject as? String else { return }
-        mainWindowController?.setLineEnding(ending)
+        mainController.setLineEnding(ending)
     }
-
-    // MARK: - View actions
-
-    @objc func zoomIn(_ sender: Any?) {
-        mainWindowController?.zoom(delta: 1)
-    }
-
-    @objc func zoomOut(_ sender: Any?) {
-        mainWindowController?.zoom(delta: -1)
-    }
-
-    @objc func zoomReset(_ sender: Any?) {
-        mainWindowController?.zoomReset()
-    }
-
-    @objc func toggleWordWrap(_ sender: Any?) {
-        mainWindowController?.toggleWordWrap()
-    }
+    @objc func zoomIn(_ sender: Any?) { mainController.zoom(delta: 1) }
+    @objc func zoomOut(_ sender: Any?) { mainController.zoom(delta: -1) }
+    @objc func zoomReset(_ sender: Any?) { mainController.zoomReset() }
+    @objc func toggleWordWrap(_ sender: Any?) { mainController.toggleWordWrap() }
 }

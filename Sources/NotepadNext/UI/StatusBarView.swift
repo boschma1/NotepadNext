@@ -1,13 +1,8 @@
 import AppKit
 
-/// Status bar at the bottom of the window showing document info.
 class StatusBarView: NSView {
 
-    private var lineColLabel: NSTextField!
-    private var encodingLabel: NSTextField!
-    private var lineEndingLabel: NSTextField!
-    private var languageLabel: NSTextField!
-    private var lengthLabel: NSTextField!
+    private var label: NSTextField!
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -22,65 +17,21 @@ class StatusBarView: NSView {
     private func setupViews() {
         wantsLayer = true
 
-        let separator = NSBox()
+        let separator = NSBox(frame: NSRect(x: 0, y: bounds.height - 1, width: bounds.width, height: 1))
         separator.boxType = .separator
-        separator.translatesAutoresizingMaskIntoConstraints = false
+        separator.autoresizingMask = [.width, .minYMargin]
         addSubview(separator)
 
-        lineColLabel = createLabel("Ln 1, Col 1")
-        encodingLabel = createLabel("UTF-8")
-        lineEndingLabel = createLabel("LF")
-        languageLabel = createLabel("Normal Text")
-        lengthLabel = createLabel("Length: 0  Lines: 1")
-
-        let stack = NSStackView(views: [
-            lineColLabel, createSeparatorDot(),
-            lengthLabel, createSeparatorDot(),
-            encodingLabel, createSeparatorDot(),
-            lineEndingLabel, createSeparatorDot(),
-            languageLabel
-        ])
-        stack.orientation = .horizontal
-        stack.spacing = 4
-        stack.translatesAutoresizingMaskIntoConstraints = false
-
-        addSubview(stack)
-
-        NSLayoutConstraint.activate([
-            separator.leadingAnchor.constraint(equalTo: leadingAnchor),
-            separator.trailingAnchor.constraint(equalTo: trailingAnchor),
-            separator.topAnchor.constraint(equalTo: topAnchor),
-
-            stack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
-            stack.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -12),
-            stack.centerYAnchor.constraint(equalTo: centerYAnchor, constant: 1),
-
-            heightAnchor.constraint(equalToConstant: 22),
-        ])
+        label = NSTextField(labelWithString: "Ln 1, Col 1 │ UTF-8 │ LF │ Normal Text")
+        label.font = NSFont.systemFont(ofSize: 11)
+        label.textColor = .secondaryLabelColor
+        label.frame = NSRect(x: 8, y: 1, width: bounds.width - 16, height: bounds.height - 2)
+        label.autoresizingMask = [.width]
+        addSubview(label)
     }
-
-    // MARK: - Update
 
     func update(line: Int, column: Int, length: Int, lines: Int,
                 encoding: String, lineEnding: String, language: String) {
-        lineColLabel.stringValue = "Ln \(line), Col \(column)"
-        lengthLabel.stringValue = "Length: \(length)  Lines: \(lines)"
-        encodingLabel.stringValue = encoding
-        lineEndingLabel.stringValue = lineEnding
-        languageLabel.stringValue = language
-    }
-
-    // MARK: - Helpers
-
-    private func createLabel(_ text: String) -> NSTextField {
-        let label = NSTextField(labelWithString: text)
-        label.font = NSFont.systemFont(ofSize: 11)
-        label.textColor = .secondaryLabelColor
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }
-
-    private func createSeparatorDot() -> NSTextField {
-        return createLabel("│")
+        label.stringValue = "Ln \(line), Col \(column) │ Length: \(length)  Lines: \(lines) │ \(encoding) │ \(lineEnding) │ \(language)"
     }
 }
