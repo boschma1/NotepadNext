@@ -129,8 +129,12 @@ class ThemeManager {
         ),
     ]
 
-    var currentTheme: EditorTheme = builtInThemes[0] {
-        didSet {
+    private var _currentTheme: EditorTheme = builtInThemes[0]
+
+    var currentTheme: EditorTheme {
+        get { _currentTheme }
+        set {
+            _currentTheme = newValue
             applyTheme()
             saveSettings()
         }
@@ -140,11 +144,11 @@ class ThemeManager {
     var onThemeChanged: ((EditorTheme) -> Void)?
 
     func applyTheme() {
-        switch currentTheme.appearance {
+        switch _currentTheme.appearance {
         case .light: NSApp.appearance = NSAppearance(named: .aqua)
         case .dark: NSApp.appearance = NSAppearance(named: .darkAqua)
         }
-        onThemeChanged?(currentTheme)
+        onThemeChanged?(_currentTheme)
     }
 
     // MARK: - Persistence
@@ -159,35 +163,38 @@ class ThemeManager {
     private let kBackground = "NNBackground"
 
     func loadSettings() {
-        // Restore base theme
+        // Build the theme without triggering didSet/saveSettings
+        var theme = ThemeManager.builtInThemes[0]
+
         if let name = defaults.string(forKey: kThemeName),
            let base = ThemeManager.builtInThemes.first(where: { $0.name == name }) {
-            currentTheme = base
+            theme = base
         }
 
-        // Restore custom font overrides
         if let fontName = defaults.string(forKey: kEditorFontName) {
             let size = defaults.double(forKey: kEditorFontSize)
             if let font = NSFont(name: fontName, size: size > 0 ? size : 13) {
-                currentTheme.editorFont = font
+                theme.editorFont = font
             }
         }
         if let fontName = defaults.string(forKey: kUIFontName) {
             let size = defaults.double(forKey: kUIFontSize)
             if let font = NSFont(name: fontName, size: size > 0 ? size : 13) {
-                currentTheme.uiFont = font
+                theme.uiFont = font
             }
         }
 
-        // Restore custom color overrides
         if let fgData = defaults.data(forKey: kForeground),
            let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: fgData) {
-            currentTheme.foreground = color
+            theme.foreground = color
         }
         if let bgData = defaults.data(forKey: kBackground),
            let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: bgData) {
-            currentTheme.background = color
+            theme.background = color
         }
+
+        // Set directly without triggering save
+        _currentTheme = theme
     }
 
     func saveSettings() {
