@@ -459,7 +459,7 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         let newFont = NSFontManager.shared.convert(currentFont, toSize: currentFontSize)
         textView.font = newFont
         ThemeManager.shared.currentTheme.editorFont = newFont
-        scheduleHighlighting()
+        lineNumberGutter?.needsDisplay = true
     }
 
     func zoomReset() {
@@ -468,7 +468,7 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         let newFont = NSFontManager.shared.convert(currentFont, toSize: currentFontSize)
         textView.font = newFont
         ThemeManager.shared.currentTheme.editorFont = newFont
-        scheduleHighlighting()
+        lineNumberGutter?.needsDisplay = true
     }
 
     // MARK: - Word Wrap
