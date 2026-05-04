@@ -239,6 +239,12 @@ class MenuManager {
         viewMenu.addItem(withTitle: "Document Map",
                          action: #selector(AppDelegate.toggleDocumentMap(_:)),
                          keyEquivalent: "")
+        viewMenu.addItem(withTitle: "Document List",
+                         action: #selector(AppDelegate.toggleDocumentList(_:)),
+                         keyEquivalent: "")
+        viewMenu.addItem(withTitle: "Function List",
+                         action: #selector(AppDelegate.toggleFunctionList(_:)),
+                         keyEquivalent: "")
         viewMenu.addItem(.separator())
 
         // Theme submenu

@@ -100,6 +100,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func toggleFolderPanel(_ sender: Any?) { mainController.toggleFolderPanel() }
     @objc func openFolderAsWorkspace(_ sender: Any?) { mainController.openFolderInWorkspace() }
     @objc func toggleDocumentMap(_ sender: Any?) { mainController.toggleDocumentMap() }
+    @objc func toggleDocumentList(_ sender: Any?) { mainController.toggleDocumentList() }
+    @objc func toggleFunctionList(_ sender: Any?) { mainController.toggleFunctionList() }
     @objc func showHashTools(_ sender: Any?) { mainController.showHashTools() }
     @objc func triggerAutoComplete(_ sender: Any?) { mainController.triggerAutoComplete() }
     @objc func showFindInFiles(_ sender: Any?) { mainController.showFindInFiles() }

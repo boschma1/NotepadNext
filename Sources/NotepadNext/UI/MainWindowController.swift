@@ -12,6 +12,8 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
     private var statusBarView: StatusBarView!
     private var folderPanel: FolderWorkspacePanel?
     private var documentMap: DocumentMapView?
+    private var docListPanel: DocumentListPanel?
+    private var functionListPanel: FunctionListPanel?
     private var findReplaceController: FindReplaceWindowController?
     private var findInFilesController: FindInFilesController?
     private var goToLineController: GoToLineWindowController?
@@ -179,6 +181,34 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         relayoutPanels()
     }
 
+    func toggleDocumentList() {
+        guard let cv = window?.contentView else { return }
+        if docListPanel == nil {
+            docListPanel = DocumentListPanel(frame: .zero)
+            docListPanel?.attach(to: documentManager)
+            docListPanel?.delegate = self
+            docListPanel?.autoresizingMask = [.height, .minXMargin]
+            cv.addSubview(docListPanel!)
+        }
+        docListPanel?.reload()
+        docListPanel!.isHidden.toggle()
+        relayoutPanels()
+    }
+
+    func toggleFunctionList() {
+        guard let cv = window?.contentView else { return }
+        if functionListPanel == nil {
+            functionListPanel = FunctionListPanel(frame: .zero)
+            functionListPanel?.delegate = self
+            functionListPanel?.autoresizingMask = [.height, .minXMargin]
+            cv.addSubview(functionListPanel!)
+        }
+        let lang = documentManager.activeDocument?.language ?? "Normal Text"
+        functionListPanel?.parse(text: textView.string, language: lang)
+        functionListPanel!.isHidden.toggle()
+        relayoutPanels()
+    }
+
     private func relayoutPanels() {
         guard let cv = window?.contentView else { return }
         let b = cv.bounds
@@ -194,8 +224,18 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
             lineNumberGutter?.frame = NSRect(x: 0, y: ey, width: LineNumberGutter.gutterWidth, height: eh)
         }
         if let dm = documentMap, !dm.isHidden {
-            dm.frame = NSRect(x: b.width - documentMapWidth, y: ey, width: documentMapWidth, height: eh)
-            rightInset = documentMapWidth
+            dm.frame = NSRect(x: b.width - documentMapWidth - rightInset, y: ey, width: documentMapWidth, height: eh)
+            rightInset += documentMapWidth
+        }
+        let funcListWidth: CGFloat = 200
+        if let fl = functionListPanel, !fl.isHidden {
+            fl.frame = NSRect(x: b.width - funcListWidth - rightInset, y: ey, width: funcListWidth, height: eh)
+            rightInset += funcListWidth
+        }
+        let docListWidth: CGFloat = 250
+        if let dl = docListPanel, !dl.isHidden {
+            dl.frame = NSRect(x: b.width - docListWidth - rightInset, y: ey, width: docListWidth, height: eh)
+            rightInset += docListWidth
         }
         editorScrollView.frame = NSRect(x: leftX, y: ey, width: b.width - leftX - rightInset, height: eh)
     }
@@ -470,5 +510,31 @@ extension MainWindowController: FindInFilesDelegate {
             tv.setSelectedRange(NSRange(location: targetLocation, length: 0))
             tv.scrollRangeToVisible(NSRange(location: targetLocation, length: 0))
         }
+    }
+}
+
+// MARK: - DocumentListDelegate
+
+extension MainWindowController: DocumentListDelegate {
+    func documentList(_ panel: DocumentListPanel, didSelectDocumentAt index: Int) {
+        documentManager.activeDocument?.content = textView.string
+        documentManager.switchToDocument(at: index)
+    }
+}
+
+// MARK: - FunctionListDelegate
+
+extension MainWindowController: FunctionListDelegate {
+    func functionList(_ panel: FunctionListPanel, didSelectFunction lineNumber: Int) {
+        let content = textView.string as NSString
+        var currentLine = 1
+        var targetLocation = 0
+        content.enumerateSubstrings(in: NSRange(location: 0, length: content.length),
+                                    options: [.byLines, .substringNotRequired]) { _, range, _, stop in
+            if currentLine == lineNumber { targetLocation = range.location; stop.pointee = true }
+            currentLine += 1
+        }
+        textView.setSelectedRange(NSRange(location: targetLocation, length: 0))
+        textView.scrollRangeToVisible(NSRange(location: targetLocation, length: 0))
     }
 }
