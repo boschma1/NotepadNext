@@ -7,6 +7,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var menuManager: MenuManager?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Restore saved theme before building UI
+        ThemeManager.shared.loadSettings()
+
         menuManager = MenuManager()
         menuManager?.setupMainMenu()
 
@@ -23,6 +26,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         mainController = MainWindowController(window: window)
         mainController.setupContent()
+
+        // Apply saved theme to editor
+        ThemeManager.shared.applyTheme()
 
         // Restore previous session
         SessionManager.shared.restoreSession(into: mainController.documentManager)

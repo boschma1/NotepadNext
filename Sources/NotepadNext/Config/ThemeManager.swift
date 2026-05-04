@@ -130,7 +130,10 @@ class ThemeManager {
     ]
 
     var currentTheme: EditorTheme = builtInThemes[0] {
-        didSet { applyTheme() }
+        didSet {
+            applyTheme()
+            saveSettings()
+        }
     }
 
     /// Callback for when the theme changes so the editor can update.
@@ -142,6 +145,64 @@ class ThemeManager {
         case .dark: NSApp.appearance = NSAppearance(named: .darkAqua)
         }
         onThemeChanged?(currentTheme)
+    }
+
+    // MARK: - Persistence
+
+    private let defaults = UserDefaults.standard
+    private let kThemeName = "NNThemeName"
+    private let kEditorFontName = "NNEditorFontName"
+    private let kEditorFontSize = "NNEditorFontSize"
+    private let kUIFontName = "NNUIFontName"
+    private let kUIFontSize = "NNUIFontSize"
+    private let kForeground = "NNForeground"
+    private let kBackground = "NNBackground"
+
+    func loadSettings() {
+        // Restore base theme
+        if let name = defaults.string(forKey: kThemeName),
+           let base = ThemeManager.builtInThemes.first(where: { $0.name == name }) {
+            currentTheme = base
+        }
+
+        // Restore custom font overrides
+        if let fontName = defaults.string(forKey: kEditorFontName) {
+            let size = defaults.double(forKey: kEditorFontSize)
+            if let font = NSFont(name: fontName, size: size > 0 ? size : 13) {
+                currentTheme.editorFont = font
+            }
+        }
+        if let fontName = defaults.string(forKey: kUIFontName) {
+            let size = defaults.double(forKey: kUIFontSize)
+            if let font = NSFont(name: fontName, size: size > 0 ? size : 13) {
+                currentTheme.uiFont = font
+            }
+        }
+
+        // Restore custom color overrides
+        if let fgData = defaults.data(forKey: kForeground),
+           let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: fgData) {
+            currentTheme.foreground = color
+        }
+        if let bgData = defaults.data(forKey: kBackground),
+           let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: bgData) {
+            currentTheme.background = color
+        }
+    }
+
+    func saveSettings() {
+        defaults.set(currentTheme.name, forKey: kThemeName)
+        defaults.set(currentTheme.editorFont.fontName, forKey: kEditorFontName)
+        defaults.set(Double(currentTheme.editorFont.pointSize), forKey: kEditorFontSize)
+        defaults.set(currentTheme.uiFont.fontName, forKey: kUIFontName)
+        defaults.set(Double(currentTheme.uiFont.pointSize), forKey: kUIFontSize)
+
+        if let fgData = try? NSKeyedArchiver.archivedData(withRootObject: currentTheme.foreground, requiringSecureCoding: false) {
+            defaults.set(fgData, forKey: kForeground)
+        }
+        if let bgData = try? NSKeyedArchiver.archivedData(withRootObject: currentTheme.background, requiringSecureCoding: false) {
+            defaults.set(bgData, forKey: kBackground)
+        }
     }
 }
 
