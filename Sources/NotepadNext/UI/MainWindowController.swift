@@ -13,7 +13,9 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
     private var folderPanel: FolderWorkspacePanel?
     private var documentMap: DocumentMapView?
     private var findReplaceController: FindReplaceWindowController?
+    private var findInFilesController: FindInFilesController?
     private var goToLineController: GoToLineWindowController?
+    private var preferencesController: PreferencesWindowController?
 
     // Lightweight wrapper so the rest of the code can use editorView.text / .language
     var editorView: EditorViewAccessor!
@@ -242,6 +244,44 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         goToLineController?.showAndFocus()
     }
 
+    func showFindInFiles() {
+        if findInFilesController == nil {
+            findInFilesController = FindInFilesController()
+            findInFilesController?.openFileDelegate = self
+        }
+        let dir = documentManager.activeDocument?.fileURL?.deletingLastPathComponent().path
+        findInFilesController?.showAndFocus(directory: dir)
+    }
+
+    func showPreferences() {
+        if preferencesController == nil {
+            preferencesController = PreferencesWindowController()
+        }
+        preferencesController?.showAndFocus()
+    }
+
+    func runInTerminal() {
+        guard let url = documentManager.activeDocument?.fileURL else {
+            NSSound.beep(); return
+        }
+        let dir = url.deletingLastPathComponent().path
+        let script = "tell application \"Terminal\" to do script \"cd \\\"\(dir)\\\"\""
+        if let appleScript = NSAppleScript(source: script) {
+            var error: NSDictionary?
+            appleScript.executeAndReturnError(&error)
+        }
+    }
+
+    func openInDefaultApp() {
+        guard let url = documentManager.activeDocument?.fileURL else { return }
+        NSWorkspace.shared.open(url)
+    }
+
+    func revealInFinder() {
+        guard let url = documentManager.activeDocument?.fileURL else { return }
+        NSWorkspace.shared.activateFileViewerSelecting([url])
+    }
+
     func setLanguage(_ language: String) {
         guard let doc = documentManager.activeDocument else { return }
         doc.language = language
@@ -407,5 +447,28 @@ extension MainWindowController: TabBarViewDelegate {
 extension MainWindowController: FolderWorkspaceDelegate {
     func folderWorkspace(_ panel: FolderWorkspacePanel, didSelectFile url: URL) {
         documentManager.openDocument(at: url)
+    }
+}
+
+// MARK: - FindInFilesDelegate
+
+extension MainWindowController: FindInFilesDelegate {
+    func findInFiles(_ controller: FindInFilesController, openFile path: String, atLine line: Int) {
+        let url = URL(fileURLWithPath: path)
+        documentManager.openDocument(at: url)
+        // Jump to line
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            guard let tv = self?.textView else { return }
+            let content = tv.string as NSString
+            var currentLine = 1
+            var targetLocation = 0
+            content.enumerateSubstrings(in: NSRange(location: 0, length: content.length),
+                                        options: [.byLines, .substringNotRequired]) { _, range, _, stop in
+                if currentLine == line { targetLocation = range.location; stop.pointee = true }
+                currentLine += 1
+            }
+            tv.setSelectedRange(NSRange(location: targetLocation, length: 0))
+            tv.scrollRangeToVisible(NSRange(location: targetLocation, length: 0))
+        }
     }
 }

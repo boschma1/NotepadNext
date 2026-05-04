@@ -14,6 +14,7 @@ class MenuManager {
         mainMenu.addItem(createLanguageMenu())
         mainMenu.addItem(createMacroMenu())
         mainMenu.addItem(createToolsMenu())
+        mainMenu.addItem(createRunMenu())
         mainMenu.addItem(createWindowMenu())
         mainMenu.addItem(createHelpMenu())
 
@@ -32,7 +33,7 @@ class MenuManager {
         appMenu.addItem(.separator())
 
         let prefsItem = NSMenuItem(title: "Settings…",
-                                   action: nil,
+                                   action: #selector(AppDelegate.showPreferences(_:)),
                                    keyEquivalent: ",")
         appMenu.addItem(prefsItem)
         appMenu.addItem(.separator())
@@ -198,6 +199,14 @@ class MenuManager {
                                   action: #selector(AppDelegate.showGoToLine(_:)),
                                   keyEquivalent: "g")
         searchMenu.addItem(goToItem)
+
+        searchMenu.addItem(.separator())
+
+        let findInFiles = NSMenuItem(title: "Find in Files…",
+                                     action: #selector(AppDelegate.showFindInFiles(_:)),
+                                     keyEquivalent: "F")
+        findInFiles.keyEquivalentModifierMask = [.command, .shift]
+        searchMenu.addItem(findInFiles)
 
         searchMenuItem.submenu = searchMenu
         return searchMenuItem
@@ -392,6 +401,26 @@ class MenuManager {
 
         toolsMenuItem.submenu = toolsMenu
         return toolsMenuItem
+    }
+
+    // MARK: - Run Menu
+
+    private func createRunMenu() -> NSMenuItem {
+        let runMenuItem = NSMenuItem()
+        let runMenu = NSMenu(title: "Run")
+
+        runMenu.addItem(withTitle: "Open in Terminal",
+                        action: #selector(AppDelegate.runInTerminal(_:)),
+                        keyEquivalent: "")
+        runMenu.addItem(withTitle: "Open in Default App",
+                        action: #selector(AppDelegate.openInDefaultApp(_:)),
+                        keyEquivalent: "")
+        runMenu.addItem(withTitle: "Reveal in Finder",
+                        action: #selector(AppDelegate.revealInFinder(_:)),
+                        keyEquivalent: "")
+
+        runMenuItem.submenu = runMenu
+        return runMenuItem
     }
 
     // MARK: - Window Menu

@@ -102,6 +102,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func toggleDocumentMap(_ sender: Any?) { mainController.toggleDocumentMap() }
     @objc func showHashTools(_ sender: Any?) { mainController.showHashTools() }
     @objc func triggerAutoComplete(_ sender: Any?) { mainController.triggerAutoComplete() }
+    @objc func showFindInFiles(_ sender: Any?) { mainController.showFindInFiles() }
+    @objc func showPreferences(_ sender: Any?) { mainController.showPreferences() }
+    @objc func runInTerminal(_ sender: Any?) { mainController.runInTerminal() }
+    @objc func openInDefaultApp(_ sender: Any?) { mainController.openInDefaultApp() }
+    @objc func revealInFinder(_ sender: Any?) { mainController.revealInFinder() }
     @objc func setTheme(_ sender: NSMenuItem) {
         guard let name = sender.representedObject as? String else { return }
         switch name {
