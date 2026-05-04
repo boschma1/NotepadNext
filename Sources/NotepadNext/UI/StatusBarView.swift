@@ -30,8 +30,8 @@ class StatusBarView: NSView {
         addSubview(label)
     }
 
-    func update(line: Int, column: Int, length: Int, lines: Int,
+    func update(line: Int, column: Int, length: Int, lines: Int, words: Int,
                 encoding: String, lineEnding: String, language: String) {
-        label.stringValue = "Ln \(line), Col \(column) │ Length: \(length)  Lines: \(lines) │ \(encoding) │ \(lineEnding) │ \(language)"
+        label.stringValue = "Ln \(line), Col \(column) │ Words: \(words)  Length: \(length)  Lines: \(lines) │ \(encoding) │ \(lineEnding) │ \(language)"
     }
 }

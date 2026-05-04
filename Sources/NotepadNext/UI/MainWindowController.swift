@@ -562,6 +562,7 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
     private func updateStatusBar(for doc: Document) {
         let text = textView.string
         let lines = text.components(separatedBy: .newlines).count
+        let words = text.split { $0.isWhitespace || $0.isNewline }.count
         let sel = textView.selectedRange()
         let upTo = (text as NSString).substring(to: sel.location)
         let lc = upTo.components(separatedBy: .newlines)
@@ -569,7 +570,7 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         case .utf8: return "UTF-8"; case .utf16: return "UTF-16"
         case .ascii: return "ASCII"; default: return "ANSI" } }()
         statusBarView.update(line: lc.count, column: (lc.last?.count ?? 0) + 1,
-                             length: text.count, lines: lines,
+                             length: text.count, lines: lines, words: words,
                              encoding: enc, lineEnding: doc.lineEnding.rawValue, language: doc.language)
     }
 
