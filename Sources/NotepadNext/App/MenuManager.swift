@@ -219,6 +219,30 @@ class MenuManager {
                          keyEquivalent: "")
         viewMenu.addItem(.separator())
 
+        viewMenu.addItem(withTitle: "Folder as Workspace",
+                         action: #selector(AppDelegate.toggleFolderPanel(_:)),
+                         keyEquivalent: "")
+        viewMenu.addItem(withTitle: "Open Folder…",
+                         action: #selector(AppDelegate.openFolderAsWorkspace(_:)),
+                         keyEquivalent: "")
+        viewMenu.addItem(withTitle: "Document Map",
+                         action: #selector(AppDelegate.toggleDocumentMap(_:)),
+                         keyEquivalent: "")
+        viewMenu.addItem(.separator())
+
+        // Theme submenu
+        let themeMenu = NSMenu(title: "Theme")
+        for theme in ["System", "Light", "Dark"] {
+            let item = NSMenuItem(title: theme, action: #selector(AppDelegate.setTheme(_:)), keyEquivalent: "")
+            item.representedObject = theme
+            themeMenu.addItem(item)
+        }
+        let themeItem = NSMenuItem(title: "Theme", action: nil, keyEquivalent: "")
+        themeItem.submenu = themeMenu
+        viewMenu.addItem(themeItem)
+
+        viewMenu.addItem(.separator())
+
         let zoomIn = NSMenuItem(title: "Zoom In",
                                 action: #selector(AppDelegate.zoomIn(_:)),
                                 keyEquivalent: "+")

@@ -8,15 +8,20 @@ class MainWindowController: NSWindowController {
     private var tabBarView: TabBarView!
     private var editorView: EditorView!
     private var statusBarView: StatusBarView!
+    private var folderPanel: FolderWorkspacePanel?
+    private var documentMap: DocumentMapView?
     private var findReplaceController: FindReplaceWindowController?
     private var goToLineController: GoToLineWindowController?
+
+    private let tabBarHeight: CGFloat = 30
+    private let statusBarHeight: CGFloat = 22
+    private var folderPanelWidth: CGFloat = 220
+    private var documentMapWidth: CGFloat = 120
 
     func setupContent() {
         guard let contentView = window?.contentView else { return }
 
         let bounds = contentView.bounds
-        let tabBarHeight: CGFloat = 30
-        let statusBarHeight: CGFloat = 22
 
         tabBarView = TabBarView(frame: NSRect(
             x: 0, y: bounds.height - tabBarHeight,
@@ -46,6 +51,70 @@ class MainWindowController: NSWindowController {
 
         documentManager.delegate = self
         documentManager.createNewDocument()
+    }
+
+    private func relayoutPanels() {
+        guard let contentView = window?.contentView else { return }
+        let bounds = contentView.bounds
+        let editorY = statusBarHeight
+        let editorHeight = bounds.height - tabBarHeight - statusBarHeight
+
+        var leftX: CGFloat = 0
+        var rightInset: CGFloat = 0
+
+        if let fp = folderPanel, !fp.isHidden {
+            fp.frame = NSRect(x: 0, y: editorY, width: folderPanelWidth, height: editorHeight)
+            leftX = folderPanelWidth
+        }
+
+        if let dm = documentMap, !dm.isHidden {
+            dm.frame = NSRect(x: bounds.width - documentMapWidth, y: editorY,
+                              width: documentMapWidth, height: editorHeight)
+            rightInset = documentMapWidth
+        }
+
+        editorView.frame = NSRect(x: leftX, y: editorY,
+                                   width: bounds.width - leftX - rightInset, height: editorHeight)
+    }
+
+    // MARK: - Panel Toggles
+
+    func toggleFolderPanel() {
+        guard let contentView = window?.contentView else { return }
+        if folderPanel == nil {
+            folderPanel = FolderWorkspacePanel(frame: .zero)
+            folderPanel?.delegate = self
+            folderPanel?.autoresizingMask = [.height, .maxXMargin]
+            contentView.addSubview(folderPanel!)
+        }
+        folderPanel!.isHidden.toggle()
+        relayoutPanels()
+    }
+
+    func openFolderInWorkspace() {
+        guard let window = window else { return }
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.beginSheetModal(for: window) { [weak self] response in
+            guard response == .OK, let url = panel.url else { return }
+            if self?.folderPanel == nil || self?.folderPanel?.isHidden == true {
+                self?.toggleFolderPanel()
+            }
+            self?.folderPanel?.addFolder(url)
+        }
+    }
+
+    func toggleDocumentMap() {
+        guard let contentView = window?.contentView else { return }
+        if documentMap == nil {
+            documentMap = DocumentMapView(frame: .zero)
+            documentMap?.autoresizingMask = [.height, .minXMargin]
+            contentView.addSubview(documentMap!)
+            documentMap?.attachToEditor(editorView.textView)
+        }
+        documentMap!.isHidden.toggle()
+        relayoutPanels()
     }
 
     // MARK: - File Actions
@@ -252,5 +321,13 @@ extension MainWindowController: EditorViewDelegate {
         guard let doc = documentManager.activeDocument else { return }
         documentManager.updateContent(for: doc, content: editorView.text)
         updateStatusBar(for: doc)
+    }
+}
+
+// MARK: - FolderWorkspaceDelegate
+
+extension MainWindowController: FolderWorkspaceDelegate {
+    func folderWorkspace(_ panel: FolderWorkspacePanel, didSelectFile url: URL) {
+        documentManager.openDocument(at: url)
     }
 }

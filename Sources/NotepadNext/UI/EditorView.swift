@@ -63,6 +63,12 @@ class EditorView: NSView {
 
         scrollView.documentView = textView
         textView.textStorage?.delegate = syntaxHighlighter
+
+        // Line number gutter
+        scrollView.rulersVisible = true
+        scrollView.hasVerticalRuler = true
+        scrollView.verticalRulerView = LineNumberGutter(scrollView: scrollView, textView: textView)
+
         addSubview(scrollView)
         textView.delegate = self
     }

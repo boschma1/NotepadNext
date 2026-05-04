@@ -75,4 +75,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func zoomOut(_ sender: Any?) { mainController.zoom(delta: -1) }
     @objc func zoomReset(_ sender: Any?) { mainController.zoomReset() }
     @objc func toggleWordWrap(_ sender: Any?) { mainController.toggleWordWrap() }
+    @objc func toggleFolderPanel(_ sender: Any?) { mainController.toggleFolderPanel() }
+    @objc func openFolderAsWorkspace(_ sender: Any?) { mainController.openFolderInWorkspace() }
+    @objc func toggleDocumentMap(_ sender: Any?) { mainController.toggleDocumentMap() }
+    @objc func setTheme(_ sender: NSMenuItem) {
+        guard let name = sender.representedObject as? String else { return }
+        switch name {
+        case "Light": ThemeManager.shared.currentTheme = .light
+        case "Dark": ThemeManager.shared.currentTheme = .dark
+        default: ThemeManager.shared.currentTheme = .system
+        }
+    }
 }
