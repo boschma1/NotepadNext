@@ -88,6 +88,15 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
 
         documentManager.delegate = self
         documentManager.createNewDocument()
+
+        // Handle tab context menu "Copy Path"
+        NotificationCenter.default.addObserver(forName: .init("CopyTabPath"), object: nil, queue: .main) { [weak self] n in
+            guard let idx = n.object as? Int,
+                  let doc = self?.documentManager.documents[safe: idx],
+                  let path = doc.fileURL?.path else { return }
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(path, forType: .string)
+        }
     }
 
     // MARK: - NSTextViewDelegate
@@ -96,6 +105,36 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         guard let doc = documentManager.activeDocument else { return }
         documentManager.updateContent(for: doc, content: textView.string)
         updateStatusBar(for: doc)
+        applySyntaxHighlighting()
+    }
+
+    /// Applies syntax highlighting without using NSTextStorageDelegate
+    /// (which was causing text to become invisible).
+    private func applySyntaxHighlighting() {
+        guard let ts = textView.textStorage else { return }
+        let language = documentManager.activeDocument?.language ?? "Normal Text"
+        let rules = SyntaxRules.rules(for: language, theme: SyntaxTheme.defaultLight)
+        guard !rules.isEmpty else { return }
+
+        let range = NSRange(location: 0, length: ts.length)
+        let defaultFont = NSFont.monospacedSystemFont(ofSize: currentFontSize, weight: .regular)
+
+        ts.beginEditing()
+        ts.addAttribute(.foregroundColor, value: NSColor.textColor, range: range)
+        ts.addAttribute(.font, value: defaultFont, range: range)
+
+        for rule in rules {
+            guard let regex = rule.regex else { continue }
+            regex.enumerateMatches(in: ts.string, range: range) { match, _, _ in
+                guard let mr = match?.range else { return }
+                ts.addAttribute(.foregroundColor, value: rule.color, range: mr)
+                if let trait = rule.fontTrait {
+                    let styled = NSFontManager.shared.convert(defaultFont, toHaveTrait: trait)
+                    ts.addAttribute(.font, value: styled, range: mr)
+                }
+            }
+        }
+        ts.endEditing()
     }
 
     // MARK: - Panel Toggles
@@ -294,6 +333,7 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
     private func loadDocumentIntoEditor(_ doc: Document) {
         editorView.language = doc.language
         textView.string = doc.content
+        applySyntaxHighlighting()
         updateStatusBar(for: doc)
         window?.title = "NotepadNext — \(doc.fileURL?.path ?? doc.title)"
     }

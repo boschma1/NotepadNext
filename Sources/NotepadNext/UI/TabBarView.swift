@@ -94,6 +94,53 @@ class TabBarView: NSView {
         delegate?.tabBarView(self, didCloseTabAt: sender.tag)
     }
 
+    override func menu(for event: NSEvent) -> NSMenu? {
+        let point = convert(event.locationInWindow, from: nil)
+        // Find which tab was right-clicked
+        for (i, _) in tabs.enumerated() {
+            for sub in subviews {
+                if let btn = sub as? NSButton, btn.tag == i, btn.frame.contains(point) {
+                    let menu = NSMenu()
+                    let closeItem = NSMenuItem(title: "Close", action: #selector(contextClose(_:)), keyEquivalent: "")
+                    closeItem.tag = i
+                    closeItem.target = self
+                    menu.addItem(closeItem)
+
+                    let closeOthers = NSMenuItem(title: "Close All But This", action: #selector(contextCloseOthers(_:)), keyEquivalent: "")
+                    closeOthers.tag = i
+                    closeOthers.target = self
+                    menu.addItem(closeOthers)
+
+                    menu.addItem(.separator())
+
+                    let copyPath = NSMenuItem(title: "Copy File Path", action: #selector(contextCopyPath(_:)), keyEquivalent: "")
+                    copyPath.tag = i
+                    copyPath.target = self
+                    menu.addItem(copyPath)
+
+                    return menu
+                }
+            }
+        }
+        return nil
+    }
+
+    @objc private func contextClose(_ sender: NSMenuItem) {
+        delegate?.tabBarView(self, didCloseTabAt: sender.tag)
+    }
+
+    @objc private func contextCloseOthers(_ sender: NSMenuItem) {
+        let keep = sender.tag
+        for i in stride(from: tabs.count - 1, through: 0, by: -1) {
+            if i != keep { delegate?.tabBarView(self, didCloseTabAt: i) }
+        }
+    }
+
+    @objc private func contextCopyPath(_ sender: NSMenuItem) {
+        // Delegate will handle this via notification
+        NotificationCenter.default.post(name: .init("CopyTabPath"), object: sender.tag)
+    }
+
     @objc private func addClicked() {
         delegate?.tabBarViewDidRequestNewTab(self)
     }

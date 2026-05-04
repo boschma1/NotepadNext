@@ -15,3 +15,9 @@ struct AppConfig {
         try? FileManager.default.createDirectory(at: configDirectory, withIntermediateDirectories: true)
     }
 }
+
+extension Array {
+    subscript(safe index: Int) -> Element? {
+        return indices.contains(index) ? self[index] : nil
+    }
+}

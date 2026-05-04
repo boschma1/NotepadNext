@@ -27,12 +27,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Restore previous session
         SessionManager.shared.restoreSession(into: mainController.documentManager)
 
+        // Enable drag-and-drop of files onto the window
+        window.registerForDraggedTypes([.fileURL])
+
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool { true }
+
+    func application(_ sender: NSApplication, openFile filename: String) -> Bool {
+        let url = URL(fileURLWithPath: filename)
+        mainController.documentManager.openDocument(at: url)
+        return true
+    }
+
+    func application(_ sender: NSApplication, openFiles filenames: [String]) {
+        for f in filenames {
+            mainController.documentManager.openDocument(at: URL(fileURLWithPath: f))
+        }
+    }
 
     func applicationWillTerminate(_ notification: Notification) {
         SessionManager.shared.saveSession(from: mainController.documentManager)
