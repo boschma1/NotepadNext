@@ -102,6 +102,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func toggleDocumentMap(_ sender: Any?) { mainController.toggleDocumentMap() }
     @objc func toggleDocumentList(_ sender: Any?) { mainController.toggleDocumentList() }
     @objc func toggleFunctionList(_ sender: Any?) { mainController.toggleFunctionList() }
+    @objc func toggleProjectPanel(_ sender: Any?) { mainController.toggleProjectPanel() }
+    @objc func toggleSplitView(_ sender: Any?) { mainController.toggleSplitView() }
+    @objc func rotateSplitView(_ sender: Any?) { mainController.rotateSplitView() }
     @objc func showHashTools(_ sender: Any?) { mainController.showHashTools() }
     @objc func triggerAutoComplete(_ sender: Any?) { mainController.triggerAutoComplete() }
     @objc func showFindInFiles(_ sender: Any?) { mainController.showFindInFiles() }

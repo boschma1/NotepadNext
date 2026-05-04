@@ -245,6 +245,16 @@ class MenuManager {
         viewMenu.addItem(withTitle: "Function List",
                          action: #selector(AppDelegate.toggleFunctionList(_:)),
                          keyEquivalent: "")
+        viewMenu.addItem(withTitle: "Project Panel",
+                         action: #selector(AppDelegate.toggleProjectPanel(_:)),
+                         keyEquivalent: "")
+        viewMenu.addItem(.separator())
+        viewMenu.addItem(withTitle: "Split View",
+                         action: #selector(AppDelegate.toggleSplitView(_:)),
+                         keyEquivalent: "")
+        viewMenu.addItem(withTitle: "Rotate Split",
+                         action: #selector(AppDelegate.rotateSplitView(_:)),
+                         keyEquivalent: "")
         viewMenu.addItem(.separator())
 
         // Theme submenu

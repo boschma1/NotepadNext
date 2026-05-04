@@ -14,6 +14,8 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
     private var documentMap: DocumentMapView?
     private var docListPanel: DocumentListPanel?
     private var functionListPanel: FunctionListPanel?
+    private var projectPanel: ProjectPanel?
+    private var splitViewManager: SplitViewManager?
     private var findReplaceController: FindReplaceWindowController?
     private var findInFilesController: FindInFilesController?
     private var goToLineController: GoToLineWindowController?
@@ -89,6 +91,7 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         editorView = EditorViewAccessor(textView: textView)
         editorCommands = EditorCommands(textView: textView)
         wordCompleter = WordCompleter(textView: textView)
+        splitViewManager = SplitViewManager(mainController: self)
 
         documentManager.delegate = self
         documentManager.createNewDocument()
@@ -209,6 +212,49 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         relayoutPanels()
     }
 
+    func toggleProjectPanel() {
+        guard let cv = window?.contentView else { return }
+        if projectPanel == nil {
+            projectPanel = ProjectPanel(frame: .zero)
+            projectPanel?.delegate = self
+            projectPanel?.autoresizingMask = [.height, .maxXMargin]
+            cv.addSubview(projectPanel!)
+        }
+        projectPanel!.isHidden.toggle()
+        relayoutPanels()
+    }
+
+    func toggleSplitView() {
+        guard let cv = window?.contentView else { return }
+        let b = cv.bounds
+        let ey = statusBarHeight
+        let eh = b.height - tabBarHeight - statusBarHeight
+        let editorFrame = editorScrollView.frame
+
+        splitViewManager?.toggle(in: cv, editorFrame: editorFrame)
+
+        if let svm = splitViewManager, svm.isActive,
+           let (mainF, secondF) = svm.splitFrames(for: editorFrame) {
+            editorScrollView.frame = mainF
+            svm.secondScrollView?.frame = secondF
+        } else {
+            relayoutPanels()
+        }
+    }
+
+    func rotateSplitView() {
+        splitViewManager?.toggleOrientation()
+        if let svm = splitViewManager, svm.isActive {
+            let editorFrame = NSRect(x: editorScrollView.frame.minX, y: editorScrollView.frame.minY,
+                                      width: editorScrollView.frame.width + (svm.secondScrollView?.frame.width ?? 0) + 2,
+                                      height: max(editorScrollView.frame.height, svm.secondScrollView?.frame.height ?? 0))
+            if let (mainF, secondF) = svm.splitFrames(for: editorFrame) {
+                editorScrollView.frame = mainF
+                svm.secondScrollView?.frame = secondF
+            }
+        }
+    }
+
     private func relayoutPanels() {
         guard let cv = window?.contentView else { return }
         let b = cv.bounds
@@ -216,10 +262,21 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         let eh = b.height - tabBarHeight - statusBarHeight
         var leftX: CGFloat = LineNumberGutter.gutterWidth
         var rightInset: CGFloat = 0
+
+        // Left panels
+        var leftPanelWidth: CGFloat = 0
         if let fp = folderPanel, !fp.isHidden {
             fp.frame = NSRect(x: 0, y: ey, width: folderPanelWidth, height: eh)
-            leftX = folderPanelWidth + LineNumberGutter.gutterWidth
-            lineNumberGutter?.frame = NSRect(x: folderPanelWidth, y: ey, width: LineNumberGutter.gutterWidth, height: eh)
+            leftPanelWidth = folderPanelWidth
+        }
+        if let pp = projectPanel, !pp.isHidden {
+            let ppWidth: CGFloat = 200
+            pp.frame = NSRect(x: leftPanelWidth, y: ey, width: ppWidth, height: eh)
+            leftPanelWidth += ppWidth
+        }
+        if leftPanelWidth > 0 {
+            leftX = leftPanelWidth + LineNumberGutter.gutterWidth
+            lineNumberGutter?.frame = NSRect(x: leftPanelWidth, y: ey, width: LineNumberGutter.gutterWidth, height: eh)
         } else {
             lineNumberGutter?.frame = NSRect(x: 0, y: ey, width: LineNumberGutter.gutterWidth, height: eh)
         }
@@ -536,5 +593,13 @@ extension MainWindowController: FunctionListDelegate {
         }
         textView.setSelectedRange(NSRange(location: targetLocation, length: 0))
         textView.scrollRangeToVisible(NSRange(location: targetLocation, length: 0))
+    }
+}
+
+// MARK: - ProjectPanelDelegate
+
+extension MainWindowController: ProjectPanelDelegate {
+    func projectPanel(_ panel: ProjectPanel, didSelectFile url: URL) {
+        documentManager.openDocument(at: url)
     }
 }
