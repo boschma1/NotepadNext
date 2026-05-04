@@ -114,10 +114,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func revealInFinder(_ sender: Any?) { mainController.revealInFinder() }
     @objc func setTheme(_ sender: NSMenuItem) {
         guard let name = sender.representedObject as? String else { return }
-        switch name {
-        case "Light": ThemeManager.shared.currentTheme = .light
-        case "Dark": ThemeManager.shared.currentTheme = .dark
-        default: ThemeManager.shared.currentTheme = .system
+        if let theme = ThemeManager.builtInThemes.first(where: { $0.name == name }) {
+            ThemeManager.shared.currentTheme = theme
         }
     }
     @objc func macroStartStop(_ sender: Any?) {

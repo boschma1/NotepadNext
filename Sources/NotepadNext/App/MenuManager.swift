@@ -259,9 +259,9 @@ class MenuManager {
 
         // Theme submenu
         let themeMenu = NSMenu(title: "Theme")
-        for theme in ["System", "Light", "Dark"] {
-            let item = NSMenuItem(title: theme, action: #selector(AppDelegate.setTheme(_:)), keyEquivalent: "")
-            item.representedObject = theme
+        for theme in ThemeManager.builtInThemes {
+            let item = NSMenuItem(title: theme.name, action: #selector(AppDelegate.setTheme(_:)), keyEquivalent: "")
+            item.representedObject = theme.name
             themeMenu.addItem(item)
         }
         let themeItem = NSMenuItem(title: "Theme", action: nil, keyEquivalent: "")

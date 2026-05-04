@@ -93,6 +93,11 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         wordCompleter = WordCompleter(textView: textView)
         splitViewManager = SplitViewManager(mainController: self)
 
+        // Listen for theme changes
+        ThemeManager.shared.onThemeChanged = { [weak self] theme in
+            self?.applyEditorTheme(theme)
+        }
+
         documentManager.delegate = self
         documentManager.createNewDocument()
 
@@ -138,20 +143,17 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
 
     private func applySyntaxHighlighting() {
         guard let ts = textView.textStorage else { return }
-
-        // Skip highlighting for very large files
         guard ts.length < maxHighlightSize else { return }
 
         let language = documentManager.activeDocument?.language ?? "Normal Text"
-        let rules = SyntaxRules.rules(for: language, theme: SyntaxTheme.defaultLight)
+        let theme = ThemeManager.shared.currentTheme
+        let rules = SyntaxRules.rules(for: language, theme: theme.syntax)
         guard !rules.isEmpty else { return }
 
-        // Only highlight the visible range + some buffer for large files
         let fullRange: NSRange
         if ts.length > 100_000, let sv = textView.enclosingScrollView,
            let lm = textView.layoutManager, let tc = textView.textContainer {
             let visibleRect = sv.contentView.bounds
-            // Add generous buffer above and below visible area
             let buffered = visibleRect.insetBy(dx: 0, dy: -visibleRect.height * 2)
             let glyphRange = lm.glyphRange(forBoundingRect: buffered, in: tc)
             fullRange = lm.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
@@ -159,10 +161,10 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
             fullRange = NSRange(location: 0, length: ts.length)
         }
 
-        let defaultFont = NSFont.monospacedSystemFont(ofSize: currentFontSize, weight: .regular)
+        let defaultFont = theme.editorFont
 
         ts.beginEditing()
-        ts.addAttribute(.foregroundColor, value: NSColor.textColor, range: fullRange)
+        ts.addAttribute(.foregroundColor, value: theme.foreground, range: fullRange)
         ts.addAttribute(.font, value: defaultFont, range: fullRange)
 
         for rule in rules {
@@ -330,6 +332,19 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
             rightInset += docListWidth
         }
         editorScrollView.frame = NSRect(x: leftX, y: ey, width: b.width - leftX - rightInset, height: eh)
+    }
+
+    // MARK: - Theme
+
+    private func applyEditorTheme(_ theme: EditorTheme) {
+        textView.font = theme.editorFont
+        textView.textColor = theme.foreground
+        textView.backgroundColor = theme.background
+        textView.insertionPointColor = theme.caretColor
+        textView.selectedTextAttributes = [.backgroundColor: theme.selectionBg]
+        currentFontSize = theme.editorFont.pointSize
+        lineNumberGutter?.needsDisplay = true
+        applySyntaxHighlighting()
     }
 
     // MARK: - File Actions

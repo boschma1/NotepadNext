@@ -1,13 +1,12 @@
 import AppKit
 
-/// Preferences dialog with multiple tabs.
 class PreferencesWindowController: NSWindowController {
 
     private var tabView: NSTabView!
 
     convenience init() {
         let window = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 500, height: 400),
+            contentRect: NSRect(x: 0, y: 0, width: 540, height: 460),
             styleMask: [.titled, .closable],
             backing: .buffered, defer: false
         )
@@ -18,158 +17,291 @@ class PreferencesWindowController: NSWindowController {
 
     private func setupUI() {
         guard let cv = window?.contentView else { return }
-
         tabView = NSTabView(frame: cv.bounds)
         tabView.autoresizingMask = [.width, .height]
-
         tabView.addTabViewItem(createGeneralTab())
         tabView.addTabViewItem(createEditorTab())
         tabView.addTabViewItem(createAppearanceTab())
-
         cv.addSubview(tabView)
     }
+
+    // MARK: - General Tab
 
     private func createGeneralTab() -> NSTabViewItem {
         let tab = NSTabViewItem(identifier: "general")
         tab.label = "General"
-        let view = NSView(frame: NSRect(x: 0, y: 0, width: 460, height: 340))
+        let view = NSView(frame: NSRect(x: 0, y: 0, width: 500, height: 400))
+        var y: CGFloat = 360
 
-        var y: CGFloat = 300
-
-        let rememberSession = NSButton(checkboxWithTitle: "Remember session for next launch", target: nil, action: nil)
-        rememberSession.state = .on
-        rememberSession.frame = NSRect(x: 20, y: y, width: 400, height: 20)
-        view.addSubview(rememberSession)
-        y -= 30
-
-        let exitOnLastTab = NSButton(checkboxWithTitle: "Exit when last tab is closed", target: nil, action: nil)
-        exitOnLastTab.state = .on
-        exitOnLastTab.frame = NSRect(x: 20, y: y, width: 400, height: 20)
-        view.addSubview(exitOnLastTab)
-        y -= 30
-
-        let doubleClickClose = NSButton(checkboxWithTitle: "Double-click tab to close", target: nil, action: nil)
-        doubleClickClose.frame = NSRect(x: 20, y: y, width: 400, height: 20)
-        view.addSubview(doubleClickClose)
-        y -= 40
-
-        let recentLabel = NSTextField(labelWithString: "Recent files history size:")
-        recentLabel.frame = NSRect(x: 20, y: y, width: 180, height: 20)
-        view.addSubview(recentLabel)
-
-        let recentField = NSTextField(frame: NSRect(x: 200, y: y, width: 60, height: 22))
-        recentField.stringValue = "10"
-        view.addSubview(recentField)
+        for (title, isOn) in [
+            ("Remember session for next launch", true),
+            ("Exit when last tab is closed", true),
+            ("Double-click tab to close", false),
+        ] {
+            let cb = NSButton(checkboxWithTitle: title, target: nil, action: nil)
+            cb.state = isOn ? .on : .off
+            cb.frame = NSRect(x: 20, y: y, width: 440, height: 20)
+            view.addSubview(cb)
+            y -= 28
+        }
 
         tab.view = view
         return tab
     }
+
+    // MARK: - Editor Tab
 
     private func createEditorTab() -> NSTabViewItem {
         let tab = NSTabViewItem(identifier: "editor")
         tab.label = "Editor"
-        let view = NSView(frame: NSRect(x: 0, y: 0, width: 460, height: 340))
+        let view = NSView(frame: NSRect(x: 0, y: 0, width: 500, height: 400))
+        var y: CGFloat = 360
 
-        var y: CGFloat = 300
+        let fields: [(String, String)] = [("Tab size:", "4"), ("Large file threshold (KB):", "2000")]
+        for (label, value) in fields {
+            let l = NSTextField(labelWithString: label)
+            l.frame = NSRect(x: 20, y: y, width: 200, height: 20)
+            view.addSubview(l)
+            let f = NSTextField(frame: NSRect(x: 225, y: y, width: 60, height: 22))
+            f.stringValue = value
+            view.addSubview(f)
+            y -= 32
+        }
 
-        let fontLabel = NSTextField(labelWithString: "Font size:")
-        fontLabel.frame = NSRect(x: 20, y: y, width: 100, height: 20)
-        view.addSubview(fontLabel)
-
-        let fontField = NSTextField(frame: NSRect(x: 120, y: y, width: 60, height: 22))
-        fontField.stringValue = "13"
-        view.addSubview(fontField)
-        y -= 30
-
-        let tabSizeLabel = NSTextField(labelWithString: "Tab size:")
-        tabSizeLabel.frame = NSRect(x: 20, y: y, width: 100, height: 20)
-        view.addSubview(tabSizeLabel)
-
-        let tabSizeField = NSTextField(frame: NSRect(x: 120, y: y, width: 60, height: 22))
-        tabSizeField.stringValue = "4"
-        view.addSubview(tabSizeField)
-        y -= 30
-
-        let useSpaces = NSButton(checkboxWithTitle: "Use spaces instead of tabs", target: nil, action: nil)
-        useSpaces.frame = NSRect(x: 20, y: y, width: 400, height: 20)
-        view.addSubview(useSpaces)
-        y -= 30
-
-        let wordWrap = NSButton(checkboxWithTitle: "Word wrap by default", target: nil, action: nil)
-        wordWrap.frame = NSRect(x: 20, y: y, width: 400, height: 20)
-        view.addSubview(wordWrap)
-        y -= 30
-
-        let showLineNumbers = NSButton(checkboxWithTitle: "Show line numbers", target: nil, action: nil)
-        showLineNumbers.state = .on
-        showLineNumbers.frame = NSRect(x: 20, y: y, width: 400, height: 20)
-        view.addSubview(showLineNumbers)
-        y -= 30
-
-        let highlightLine = NSButton(checkboxWithTitle: "Highlight current line", target: nil, action: nil)
-        highlightLine.state = .on
-        highlightLine.frame = NSRect(x: 20, y: y, width: 400, height: 20)
-        view.addSubview(highlightLine)
-        y -= 30
-
-        let autoComplete = NSButton(checkboxWithTitle: "Enable auto-completion", target: nil, action: nil)
-        autoComplete.state = .on
-        autoComplete.frame = NSRect(x: 20, y: y, width: 400, height: 20)
-        view.addSubview(autoComplete)
+        for (title, isOn) in [
+            ("Use spaces instead of tabs", false),
+            ("Word wrap by default", false),
+            ("Show line numbers", true),
+            ("Enable auto-completion", true),
+        ] {
+            let cb = NSButton(checkboxWithTitle: title, target: nil, action: nil)
+            cb.state = isOn ? .on : .off
+            cb.frame = NSRect(x: 20, y: y, width: 440, height: 20)
+            view.addSubview(cb)
+            y -= 28
+        }
 
         tab.view = view
         return tab
     }
+
+    // MARK: - Appearance Tab
+
+    private var editorFontLabel: NSTextField!
+    private var uiFontLabel: NSTextField!
+    private var fgColorWell: NSColorWell!
+    private var bgColorWell: NSColorWell!
+    private var themePopup: NSPopUpButton!
 
     private func createAppearanceTab() -> NSTabViewItem {
         let tab = NSTabViewItem(identifier: "appearance")
         tab.label = "Appearance"
-        let view = NSView(frame: NSRect(x: 0, y: 0, width: 460, height: 340))
+        let view = NSView(frame: NSRect(x: 0, y: 0, width: 500, height: 400))
+        var y: CGFloat = 365
 
-        var y: CGFloat = 300
-
+        // Theme selector
         let themeLabel = NSTextField(labelWithString: "Theme:")
-        themeLabel.frame = NSRect(x: 20, y: y, width: 100, height: 20)
+        themeLabel.frame = NSRect(x: 20, y: y, width: 80, height: 20)
         view.addSubview(themeLabel)
 
-        let themePopup = NSPopUpButton(frame: NSRect(x: 120, y: y - 2, width: 200, height: 24))
-        themePopup.addItems(withTitles: ["System", "Light", "Dark"])
+        themePopup = NSPopUpButton(frame: NSRect(x: 100, y: y - 2, width: 200, height: 24))
+        for theme in ThemeManager.builtInThemes {
+            themePopup.addItem(withTitle: theme.name)
+        }
+        if let idx = ThemeManager.builtInThemes.firstIndex(where: { $0.name == ThemeManager.shared.currentTheme.name }) {
+            themePopup.selectItem(at: idx)
+        }
         themePopup.target = self
-        themePopup.action = #selector(themeChanged(_:))
+        themePopup.action = #selector(themeSelected(_:))
         view.addSubview(themePopup)
         y -= 40
 
-        let encodingLabel = NSTextField(labelWithString: "Default encoding:")
-        encodingLabel.frame = NSRect(x: 20, y: y, width: 120, height: 20)
-        view.addSubview(encodingLabel)
+        let sep1 = NSBox(frame: NSRect(x: 20, y: y, width: 460, height: 1))
+        sep1.boxType = .separator
+        view.addSubview(sep1)
+        y -= 16
 
-        let encodingPopup = NSPopUpButton(frame: NSRect(x: 150, y: y - 2, width: 200, height: 24))
-        encodingPopup.addItems(withTitles: ["UTF-8", "UTF-8 with BOM", "ASCII", "ISO 8859-1", "Windows-1252"])
-        view.addSubview(encodingPopup)
+        // Monospaced (editor) font
+        let editorFontTitle = NSTextField(labelWithString: "Editor font:")
+        editorFontTitle.frame = NSRect(x: 20, y: y, width: 100, height: 20)
+        view.addSubview(editorFontTitle)
+
+        editorFontLabel = NSTextField(labelWithString: describeFont(ThemeManager.shared.currentTheme.editorFont))
+        editorFontLabel.frame = NSRect(x: 125, y: y, width: 220, height: 20)
+        view.addSubview(editorFontLabel)
+
+        let editorFontBtn = NSButton(title: "Choose…", target: self, action: #selector(chooseEditorFont))
+        editorFontBtn.frame = NSRect(x: 355, y: y - 2, width: 80, height: 24)
+        view.addSubview(editorFontBtn)
+        y -= 36
+
+        // UI font
+        let uiFontTitle = NSTextField(labelWithString: "UI font:")
+        uiFontTitle.frame = NSRect(x: 20, y: y, width: 100, height: 20)
+        view.addSubview(uiFontTitle)
+
+        uiFontLabel = NSTextField(labelWithString: describeFont(ThemeManager.shared.currentTheme.uiFont))
+        uiFontLabel.frame = NSRect(x: 125, y: y, width: 220, height: 20)
+        view.addSubview(uiFontLabel)
+
+        let uiFontBtn = NSButton(title: "Choose…", target: self, action: #selector(chooseUIFont))
+        uiFontBtn.frame = NSRect(x: 355, y: y - 2, width: 80, height: 24)
+        view.addSubview(uiFontBtn)
+        y -= 36
+
+        let sep2 = NSBox(frame: NSRect(x: 20, y: y, width: 460, height: 1))
+        sep2.boxType = .separator
+        view.addSubview(sep2)
+        y -= 20
+
+        // Font color
+        let fgLabel = NSTextField(labelWithString: "Text color:")
+        fgLabel.frame = NSRect(x: 20, y: y, width: 100, height: 20)
+        view.addSubview(fgLabel)
+
+        fgColorWell = NSColorWell(frame: NSRect(x: 125, y: y - 2, width: 44, height: 24))
+        fgColorWell.color = ThemeManager.shared.currentTheme.foreground
+        fgColorWell.target = self
+        fgColorWell.action = #selector(foregroundColorChanged(_:))
+        view.addSubview(fgColorWell)
+        y -= 36
+
+        // Background color
+        let bgLabel = NSTextField(labelWithString: "Background:")
+        bgLabel.frame = NSRect(x: 20, y: y, width: 100, height: 20)
+        view.addSubview(bgLabel)
+
+        bgColorWell = NSColorWell(frame: NSRect(x: 125, y: y - 2, width: 44, height: 24))
+        bgColorWell.color = ThemeManager.shared.currentTheme.background
+        bgColorWell.target = self
+        bgColorWell.action = #selector(backgroundColorChanged(_:))
+        view.addSubview(bgColorWell)
         y -= 40
 
-        let lineEndingLabel = NSTextField(labelWithString: "Default line ending:")
-        lineEndingLabel.frame = NSRect(x: 20, y: y, width: 130, height: 20)
-        view.addSubview(lineEndingLabel)
+        // Preview
+        let sep3 = NSBox(frame: NSRect(x: 20, y: y, width: 460, height: 1))
+        sep3.boxType = .separator
+        view.addSubview(sep3)
+        y -= 8
 
-        let lineEndingPopup = NSPopUpButton(frame: NSRect(x: 150, y: y - 2, width: 200, height: 24))
-        lineEndingPopup.addItems(withTitles: ["Unix (LF)", "Windows (CRLF)", "Classic Mac (CR)"])
-        view.addSubview(lineEndingPopup)
+        let previewLabel = NSTextField(labelWithString: "Preview:")
+        previewLabel.frame = NSRect(x: 20, y: y, width: 60, height: 16)
+        previewLabel.font = NSFont.boldSystemFont(ofSize: 11)
+        view.addSubview(previewLabel)
+        y -= 6
+
+        let previewBg = NSView(frame: NSRect(x: 20, y: y - 80, width: 460, height: 86))
+        previewBg.wantsLayer = true
+        previewBg.layer?.backgroundColor = ThemeManager.shared.currentTheme.background.cgColor
+        previewBg.layer?.cornerRadius = 6
+        previewBg.layer?.borderColor = NSColor.separatorColor.cgColor
+        previewBg.layer?.borderWidth = 0.5
+        previewBg.identifier = NSUserInterfaceItemIdentifier("previewBg")
+        view.addSubview(previewBg)
+
+        let previewText = NSTextField(labelWithString:
+            "func greet(name: String) -> String {\n    return \"Hello, \\(name)!\"\n}\n// This is a preview")
+        previewText.font = ThemeManager.shared.currentTheme.editorFont
+        previewText.textColor = ThemeManager.shared.currentTheme.foreground
+        previewText.frame = NSRect(x: 8, y: 6, width: 444, height: 74)
+        previewText.maximumNumberOfLines = 5
+        previewText.identifier = NSUserInterfaceItemIdentifier("previewText")
+        previewBg.addSubview(previewText)
 
         tab.view = view
         return tab
     }
 
-    @objc private func themeChanged(_ sender: NSPopUpButton) {
-        switch sender.titleOfSelectedItem {
-        case "Light": ThemeManager.shared.currentTheme = .light
-        case "Dark": ThemeManager.shared.currentTheme = .dark
-        default: ThemeManager.shared.currentTheme = .system
+    // MARK: - Actions
+
+    @objc private func themeSelected(_ sender: NSPopUpButton) {
+        let idx = sender.indexOfSelectedItem
+        guard idx >= 0, idx < ThemeManager.builtInThemes.count else { return }
+        ThemeManager.shared.currentTheme = ThemeManager.builtInThemes[idx]
+        updateAppearanceControls()
+    }
+
+    @objc private func chooseEditorFont() {
+        let fm = NSFontManager.shared
+        fm.target = self
+        fm.setSelectedFont(ThemeManager.shared.currentTheme.editorFont, isMultiple: false)
+        fm.action = #selector(editorFontChanged(_:))
+        fm.orderFrontFontPanel(self)
+    }
+
+    @objc private func chooseUIFont() {
+        let fm = NSFontManager.shared
+        fm.target = self
+        fm.setSelectedFont(ThemeManager.shared.currentTheme.uiFont, isMultiple: false)
+        fm.action = #selector(uiFontChanged(_:))
+        fm.orderFrontFontPanel(self)
+    }
+
+    @objc private func editorFontChanged(_ sender: NSFontManager) {
+        let newFont = sender.convert(ThemeManager.shared.currentTheme.editorFont)
+        ThemeManager.shared.currentTheme.editorFont = newFont
+        editorFontLabel?.stringValue = describeFont(newFont)
+        ThemeManager.shared.applyTheme()
+        updatePreview()
+    }
+
+    @objc private func uiFontChanged(_ sender: NSFontManager) {
+        let newFont = sender.convert(ThemeManager.shared.currentTheme.uiFont)
+        ThemeManager.shared.currentTheme.uiFont = newFont
+        uiFontLabel?.stringValue = describeFont(newFont)
+        ThemeManager.shared.applyTheme()
+    }
+
+    @objc private func foregroundColorChanged(_ sender: NSColorWell) {
+        ThemeManager.shared.currentTheme.foreground = sender.color
+        ThemeManager.shared.applyTheme()
+        updatePreview()
+    }
+
+    @objc private func backgroundColorChanged(_ sender: NSColorWell) {
+        ThemeManager.shared.currentTheme.background = sender.color
+        ThemeManager.shared.applyTheme()
+        updatePreview()
+    }
+
+    private func updateAppearanceControls() {
+        let theme = ThemeManager.shared.currentTheme
+        editorFontLabel?.stringValue = describeFont(theme.editorFont)
+        uiFontLabel?.stringValue = describeFont(theme.uiFont)
+        fgColorWell?.color = theme.foreground
+        bgColorWell?.color = theme.background
+        updatePreview()
+    }
+
+    private func updatePreview() {
+        guard let tab = tabView?.tabViewItem(at: 2),
+              let view = tab.view else { return }
+        let theme = ThemeManager.shared.currentTheme
+        if let bg = view.findView(id: "previewBg") {
+            bg.layer?.backgroundColor = theme.background.cgColor
+            if let txt = bg.findView(id: "previewText") as? NSTextField {
+                txt.textColor = theme.foreground
+                txt.font = theme.editorFont
+            }
         }
+    }
+
+    private func describeFont(_ font: NSFont) -> String {
+        return "\(font.displayName ?? font.fontName), \(Int(font.pointSize))pt"
     }
 
     func showAndFocus() {
         window?.center()
         window?.makeKeyAndOrderFront(nil)
+    }
+}
+
+private extension NSView {
+    func findView(id: String) -> NSView? {
+        if identifier?.rawValue == id { return self }
+        for sub in subviews {
+            if let found = sub.findView(id: id) { return found }
+        }
+        return nil
     }
 }

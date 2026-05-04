@@ -1,52 +1,164 @@
 import AppKit
 
-/// Manages theme switching between light and dark modes.
+/// Full editor theme: fonts, colors, and syntax highlighting.
 class ThemeManager {
 
     static let shared = ThemeManager()
 
-    enum Theme: String {
-        case system = "System"
-        case light = "Light"
-        case dark = "Dark"
-        case monokai = "Monokai"
-        case solarizedDark = "Solarized Dark"
-    }
+    /// All available built-in themes
+    static let builtInThemes: [EditorTheme] = [
+        EditorTheme(
+            name: "Default Light",
+            appearance: .light,
+            editorFont: NSFont.monospacedSystemFont(ofSize: 13, weight: .regular),
+            uiFont: NSFont.systemFont(ofSize: 13),
+            foreground: NSColor.black,
+            background: NSColor.white,
+            lineHighlight: NSColor(white: 0.95, alpha: 1),
+            selectionBg: NSColor.selectedTextBackgroundColor,
+            gutterBg: NSColor(white: 0.96, alpha: 1),
+            gutterFg: NSColor.secondaryLabelColor,
+            caretColor: NSColor.black,
+            syntax: SyntaxTheme.defaultLight
+        ),
+        EditorTheme(
+            name: "Default Dark",
+            appearance: .dark,
+            editorFont: NSFont.monospacedSystemFont(ofSize: 13, weight: .regular),
+            uiFont: NSFont.systemFont(ofSize: 13),
+            foreground: NSColor(red: 0.85, green: 0.85, blue: 0.85, alpha: 1),
+            background: NSColor(red: 0.12, green: 0.12, blue: 0.14, alpha: 1),
+            lineHighlight: NSColor(white: 0.18, alpha: 1),
+            selectionBg: NSColor(red: 0.25, green: 0.35, blue: 0.55, alpha: 1),
+            gutterBg: NSColor(red: 0.14, green: 0.14, blue: 0.16, alpha: 1),
+            gutterFg: NSColor(white: 0.45, alpha: 1),
+            caretColor: NSColor.white,
+            syntax: SyntaxTheme.dark
+        ),
+        EditorTheme(
+            name: "Monokai",
+            appearance: .dark,
+            editorFont: NSFont.monospacedSystemFont(ofSize: 13, weight: .regular),
+            uiFont: NSFont.systemFont(ofSize: 13),
+            foreground: NSColor(red: 0.97, green: 0.97, blue: 0.95, alpha: 1),
+            background: NSColor(red: 0.15, green: 0.16, blue: 0.13, alpha: 1),
+            lineHighlight: NSColor(red: 0.20, green: 0.21, blue: 0.17, alpha: 1),
+            selectionBg: NSColor(red: 0.28, green: 0.30, blue: 0.24, alpha: 1),
+            gutterBg: NSColor(red: 0.15, green: 0.16, blue: 0.13, alpha: 1),
+            gutterFg: NSColor(white: 0.50, alpha: 1),
+            caretColor: NSColor(red: 0.97, green: 0.97, blue: 0.95, alpha: 1),
+            syntax: SyntaxTheme(
+                defaultColor: NSColor(red: 0.97, green: 0.97, blue: 0.95, alpha: 1),
+                keywordColor: NSColor(red: 0.98, green: 0.15, blue: 0.45, alpha: 1),
+                stringColor: NSColor(red: 0.90, green: 0.86, blue: 0.45, alpha: 1),
+                commentColor: NSColor(red: 0.46, green: 0.44, blue: 0.36, alpha: 1),
+                numberColor: NSColor(red: 0.68, green: 0.51, blue: 1.0, alpha: 1),
+                typeColor: NSColor(red: 0.40, green: 0.85, blue: 0.94, alpha: 1),
+                preprocessorColor: NSColor(red: 0.68, green: 0.51, blue: 1.0, alpha: 1),
+                operatorColor: NSColor(red: 0.98, green: 0.15, blue: 0.45, alpha: 1)
+            )
+        ),
+        EditorTheme(
+            name: "Solarized Light",
+            appearance: .light,
+            editorFont: NSFont.monospacedSystemFont(ofSize: 13, weight: .regular),
+            uiFont: NSFont.systemFont(ofSize: 13),
+            foreground: NSColor(red: 0.40, green: 0.48, blue: 0.51, alpha: 1),
+            background: NSColor(red: 0.99, green: 0.96, blue: 0.89, alpha: 1),
+            lineHighlight: NSColor(red: 0.93, green: 0.91, blue: 0.84, alpha: 1),
+            selectionBg: NSColor(red: 0.93, green: 0.91, blue: 0.84, alpha: 1),
+            gutterBg: NSColor(red: 0.93, green: 0.91, blue: 0.84, alpha: 1),
+            gutterFg: NSColor(red: 0.58, green: 0.63, blue: 0.63, alpha: 1),
+            caretColor: NSColor(red: 0.40, green: 0.48, blue: 0.51, alpha: 1),
+            syntax: SyntaxTheme(
+                defaultColor: NSColor(red: 0.40, green: 0.48, blue: 0.51, alpha: 1),
+                keywordColor: NSColor(red: 0.52, green: 0.60, blue: 0.0, alpha: 1),
+                stringColor: NSColor(red: 0.16, green: 0.63, blue: 0.60, alpha: 1),
+                commentColor: NSColor(red: 0.58, green: 0.63, blue: 0.63, alpha: 1),
+                numberColor: NSColor(red: 0.80, green: 0.29, blue: 0.09, alpha: 1),
+                typeColor: NSColor(red: 0.15, green: 0.55, blue: 0.82, alpha: 1),
+                preprocessorColor: NSColor(red: 0.83, green: 0.21, blue: 0.51, alpha: 1),
+                operatorColor: NSColor(red: 0.40, green: 0.48, blue: 0.51, alpha: 1)
+            )
+        ),
+        EditorTheme(
+            name: "Solarized Dark",
+            appearance: .dark,
+            editorFont: NSFont.monospacedSystemFont(ofSize: 13, weight: .regular),
+            uiFont: NSFont.systemFont(ofSize: 13),
+            foreground: NSColor(red: 0.51, green: 0.58, blue: 0.59, alpha: 1),
+            background: NSColor(red: 0.0, green: 0.17, blue: 0.21, alpha: 1),
+            lineHighlight: NSColor(red: 0.03, green: 0.21, blue: 0.26, alpha: 1),
+            selectionBg: NSColor(red: 0.03, green: 0.21, blue: 0.26, alpha: 1),
+            gutterBg: NSColor(red: 0.0, green: 0.17, blue: 0.21, alpha: 1),
+            gutterFg: NSColor(red: 0.40, green: 0.48, blue: 0.51, alpha: 1),
+            caretColor: NSColor(red: 0.51, green: 0.58, blue: 0.59, alpha: 1),
+            syntax: SyntaxTheme(
+                defaultColor: NSColor(red: 0.51, green: 0.58, blue: 0.59, alpha: 1),
+                keywordColor: NSColor(red: 0.52, green: 0.60, blue: 0.0, alpha: 1),
+                stringColor: NSColor(red: 0.16, green: 0.63, blue: 0.60, alpha: 1),
+                commentColor: NSColor(red: 0.40, green: 0.48, blue: 0.51, alpha: 1),
+                numberColor: NSColor(red: 0.80, green: 0.29, blue: 0.09, alpha: 1),
+                typeColor: NSColor(red: 0.15, green: 0.55, blue: 0.82, alpha: 1),
+                preprocessorColor: NSColor(red: 0.83, green: 0.21, blue: 0.51, alpha: 1),
+                operatorColor: NSColor(red: 0.51, green: 0.58, blue: 0.59, alpha: 1)
+            )
+        ),
+        EditorTheme(
+            name: "GitHub Light",
+            appearance: .light,
+            editorFont: NSFont.monospacedSystemFont(ofSize: 13, weight: .regular),
+            uiFont: NSFont.systemFont(ofSize: 13),
+            foreground: NSColor(red: 0.14, green: 0.16, blue: 0.19, alpha: 1),
+            background: NSColor.white,
+            lineHighlight: NSColor(red: 1.0, green: 0.98, blue: 0.91, alpha: 1),
+            selectionBg: NSColor(red: 0.68, green: 0.84, blue: 1.0, alpha: 1),
+            gutterBg: NSColor.white,
+            gutterFg: NSColor(red: 0.73, green: 0.77, blue: 0.82, alpha: 1),
+            caretColor: NSColor(red: 0.14, green: 0.16, blue: 0.19, alpha: 1),
+            syntax: SyntaxTheme(
+                defaultColor: NSColor(red: 0.14, green: 0.16, blue: 0.19, alpha: 1),
+                keywordColor: NSColor(red: 0.82, green: 0.10, blue: 0.27, alpha: 1),
+                stringColor: NSColor(red: 0.02, green: 0.37, blue: 0.67, alpha: 1),
+                commentColor: NSColor(red: 0.42, green: 0.47, blue: 0.53, alpha: 1),
+                numberColor: NSColor(red: 0.02, green: 0.37, blue: 0.67, alpha: 1),
+                typeColor: NSColor(red: 0.38, green: 0.28, blue: 0.61, alpha: 1),
+                preprocessorColor: NSColor(red: 0.82, green: 0.10, blue: 0.27, alpha: 1),
+                operatorColor: NSColor(red: 0.14, green: 0.16, blue: 0.19, alpha: 1)
+            )
+        ),
+    ]
 
-    var currentTheme: Theme = .system {
+    var currentTheme: EditorTheme = builtInThemes[0] {
         didSet { applyTheme() }
     }
 
+    /// Callback for when the theme changes so the editor can update.
+    var onThemeChanged: ((EditorTheme) -> Void)?
+
     func applyTheme() {
-        switch currentTheme {
-        case .system:
-            NSApp.appearance = nil
-        case .light:
-            NSApp.appearance = NSAppearance(named: .aqua)
-        case .dark:
-            NSApp.appearance = NSAppearance(named: .darkAqua)
-        case .monokai:
-            NSApp.appearance = NSAppearance(named: .darkAqua)
-        case .solarizedDark:
-            NSApp.appearance = NSAppearance(named: .darkAqua)
+        switch currentTheme.appearance {
+        case .light: NSApp.appearance = NSAppearance(named: .aqua)
+        case .dark: NSApp.appearance = NSAppearance(named: .darkAqua)
         }
+        onThemeChanged?(currentTheme)
     }
+}
 
-    func syntaxTheme(for theme: Theme) -> SyntaxTheme {
-        switch theme {
-        case .system:
-            if NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
-                return .dark
-            }
-            return .defaultLight
-        case .light:
-            return .defaultLight
-        case .dark, .monokai, .solarizedDark:
-            return .dark
-        }
-    }
+/// Complete editor theme definition.
+struct EditorTheme {
+    enum Appearance { case light, dark }
 
-    var activeSyntaxTheme: SyntaxTheme {
-        return syntaxTheme(for: currentTheme)
-    }
+    let name: String
+    let appearance: Appearance
+    var editorFont: NSFont
+    var uiFont: NSFont
+    var foreground: NSColor
+    var background: NSColor
+    var lineHighlight: NSColor
+    var selectionBg: NSColor
+    var gutterBg: NSColor
+    var gutterFg: NSColor
+    var caretColor: NSColor
+    var syntax: SyntaxTheme
 }
