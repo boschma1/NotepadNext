@@ -101,7 +101,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     @objc func macroPlayback(_ sender: Any?) {
-        MacroEngine.shared.playback(on: mainController.editorCommands!.textView!)
+        MacroEngine.shared.playback(on: mainController.textView)
     }
     @objc func macroPlayMultiple(_ sender: Any?) {
         let alert = NSAlert()
@@ -113,7 +113,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         alert.addButton(withTitle: "Run")
         alert.addButton(withTitle: "Cancel")
         if alert.runModal() == .alertFirstButtonReturn, let n = Int(field.stringValue), n > 0 {
-            MacroEngine.shared.playbackMultiple(times: n, on: mainController.editorCommands!.textView!)
+            MacroEngine.shared.playbackMultiple(times: n, on: mainController.textView)
         }
     }
 }

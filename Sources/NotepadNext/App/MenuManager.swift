@@ -12,6 +12,7 @@ class MenuManager {
         mainMenu.addItem(createViewMenu())
         mainMenu.addItem(createEncodingMenu())
         mainMenu.addItem(createLanguageMenu())
+        mainMenu.addItem(createMacroMenu())
         mainMenu.addItem(createWindowMenu())
         mainMenu.addItem(createHelpMenu())
 
@@ -313,6 +314,32 @@ class MenuManager {
 
         encMenuItem.submenu = encMenu
         return encMenuItem
+    }
+
+    // MARK: - Macro Menu
+
+    private func createMacroMenu() -> NSMenuItem {
+        let macroMenuItem = NSMenuItem()
+        let macroMenu = NSMenu(title: "Macro")
+
+        let startStop = NSMenuItem(title: "Start/Stop Recording",
+                                   action: #selector(AppDelegate.macroStartStop(_:)),
+                                   keyEquivalent: "r")
+        startStop.keyEquivalentModifierMask = [.command, .shift]
+        macroMenu.addItem(startStop)
+
+        let playback = NSMenuItem(title: "Playback",
+                                  action: #selector(AppDelegate.macroPlayback(_:)),
+                                  keyEquivalent: "p")
+        playback.keyEquivalentModifierMask = [.command, .shift]
+        macroMenu.addItem(playback)
+
+        macroMenu.addItem(withTitle: "Run Multiple Times…",
+                          action: #selector(AppDelegate.macroPlayMultiple(_:)),
+                          keyEquivalent: "")
+
+        macroMenuItem.submenu = macroMenu
+        return macroMenuItem
     }
 
     // MARK: - Language Menu
