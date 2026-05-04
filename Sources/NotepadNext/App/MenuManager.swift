@@ -15,6 +15,7 @@ class MenuManager {
         mainMenu.addItem(createMacroMenu())
         mainMenu.addItem(createToolsMenu())
         mainMenu.addItem(createRunMenu())
+        mainMenu.addItem(createPluginsMenu())
         mainMenu.addItem(createWindowMenu())
         mainMenu.addItem(createHelpMenu())
 
@@ -36,6 +37,10 @@ class MenuManager {
                                    action: #selector(AppDelegate.showPreferences(_:)),
                                    keyEquivalent: ",")
         appMenu.addItem(prefsItem)
+
+        appMenu.addItem(withTitle: "Shortcut Mapper…",
+                        action: #selector(AppDelegate.showShortcutMapper(_:)),
+                        keyEquivalent: "")
         appMenu.addItem(.separator())
 
         appMenu.addItem(withTitle: "Hide NotepadNext",
@@ -393,6 +398,24 @@ class MenuManager {
             }
         }
 
+        // Add UDL languages
+        let udlLangs = UDLManager.shared.languages
+        if !udlLangs.isEmpty {
+            langMenu.addItem(.separator())
+            for udl in udlLangs {
+                let item = NSMenuItem(title: "⚙ \(udl.name)",
+                                      action: #selector(AppDelegate.setLanguage(_:)),
+                                      keyEquivalent: "")
+                item.representedObject = udl.name
+                langMenu.addItem(item)
+            }
+        }
+
+        langMenu.addItem(.separator())
+        langMenu.addItem(withTitle: "Define Your Language…",
+                         action: #selector(AppDelegate.showUDLEditor(_:)),
+                         keyEquivalent: "")
+
         langMenuItem.submenu = langMenu
         return langMenuItem
     }
@@ -437,6 +460,32 @@ class MenuManager {
 
         runMenuItem.submenu = runMenu
         return runMenuItem
+    }
+
+    // MARK: - Plugins Menu
+
+    private func createPluginsMenu() -> NSMenuItem {
+        let pluginsMenuItem = NSMenuItem()
+        let pluginsMenu = NSMenu(title: "Plugins")
+
+        pluginsMenu.addItem(withTitle: "Plugin Manager…",
+                            action: #selector(AppDelegate.showPluginManager(_:)),
+                            keyEquivalent: "")
+        pluginsMenu.addItem(.separator())
+
+        // Add items from loaded plugins
+        for item in PluginManager.shared.pluginMenuItems() {
+            pluginsMenu.addItem(item)
+        }
+
+        if PluginManager.shared.loadedPlugins.isEmpty {
+            let noPlugins = NSMenuItem(title: "(No plugins installed)", action: nil, keyEquivalent: "")
+            noPlugins.isEnabled = false
+            pluginsMenu.addItem(noPlugins)
+        }
+
+        pluginsMenuItem.submenu = pluginsMenu
+        return pluginsMenuItem
     }
 
     // MARK: - Window Menu

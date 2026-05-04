@@ -20,6 +20,9 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
     private var findInFilesController: FindInFilesController?
     private var goToLineController: GoToLineWindowController?
     private var preferencesController: PreferencesWindowController?
+    private var shortcutMapperController: ShortcutMapperController?
+    private var pluginManagerController: PluginManagerController?
+    private var udlEditorController: UDLEditorController?
 
     // Lightweight wrapper so the rest of the code can use editorView.text / .language
     var editorView: EditorViewAccessor!
@@ -405,6 +408,27 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
             preferencesController = PreferencesWindowController()
         }
         preferencesController?.showAndFocus()
+    }
+
+    func showShortcutMapper() {
+        if shortcutMapperController == nil {
+            shortcutMapperController = ShortcutMapperController()
+        }
+        shortcutMapperController?.showAndFocus()
+    }
+
+    func showPluginManager() {
+        if pluginManagerController == nil {
+            pluginManagerController = PluginManagerController()
+        }
+        pluginManagerController?.showAndFocus()
+    }
+
+    func showUDLEditor() {
+        if udlEditorController == nil {
+            udlEditorController = UDLEditorController()
+        }
+        udlEditorController?.showAndFocus()
     }
 
     func runInTerminal() {

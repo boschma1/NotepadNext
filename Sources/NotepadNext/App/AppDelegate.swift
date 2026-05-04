@@ -9,6 +9,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Restore saved theme before building UI
         ThemeManager.shared.loadSettings()
+        UDLManager.shared.load()
+        PluginManager.shared.loadPlugins()
 
         menuManager = MenuManager()
         menuManager?.setupMainMenu()
@@ -118,6 +120,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func runInTerminal(_ sender: Any?) { mainController.runInTerminal() }
     @objc func openInDefaultApp(_ sender: Any?) { mainController.openInDefaultApp() }
     @objc func revealInFinder(_ sender: Any?) { mainController.revealInFinder() }
+    @objc func showShortcutMapper(_ sender: Any?) { mainController.showShortcutMapper() }
+    @objc func showPluginManager(_ sender: Any?) { mainController.showPluginManager() }
+    @objc func showUDLEditor(_ sender: Any?) { mainController.showUDLEditor() }
     @objc func setTheme(_ sender: NSMenuItem) {
         guard let name = sender.representedObject as? String else { return }
         if let theme = ThemeManager.builtInThemes.first(where: { $0.name == name }) {
