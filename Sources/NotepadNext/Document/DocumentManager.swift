@@ -83,7 +83,7 @@ class DocumentManager {
 
         if documents.isEmpty {
             activeIndex = -1
-            createNewDocument()
+            NSApp.terminate(nil)
         } else {
             let newIndex = min(index, documents.count - 1)
             switchToDocument(at: newIndex)
