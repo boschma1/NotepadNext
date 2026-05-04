@@ -33,9 +33,13 @@ class SyntaxHighlighter: NSObject, NSTextStorageDelegate {
     func textStorage(_ textStorage: NSTextStorage, didProcessEditing editedMask: NSTextStorageEditActions, range editedRange: NSRange, changeInLength delta: Int) {
         guard editedMask.contains(.editedCharacters), !isHighlighting else { return }
 
-        isHighlighting = true
-        highlightSyntax(in: textStorage, range: NSRange(location: 0, length: textStorage.length))
-        isHighlighting = false
+        // Defer highlighting to avoid re-entrant text storage editing
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.isHighlighting = true
+            self.highlightSyntax(in: textStorage, range: NSRange(location: 0, length: textStorage.length))
+            self.isHighlighting = false
+        }
     }
 
     private func highlightSyntax(in textStorage: NSTextStorage, range: NSRange) {
