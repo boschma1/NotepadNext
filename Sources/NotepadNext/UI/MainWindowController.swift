@@ -112,27 +112,56 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         guard let doc = documentManager.activeDocument else { return }
         documentManager.updateContent(for: doc, content: textView.string)
         updateStatusBar(for: doc)
-        applySyntaxHighlighting()
+        scheduleHighlighting()
     }
 
-    /// Applies syntax highlighting without using NSTextStorageDelegate
-    /// (which was causing text to become invisible).
+    // MARK: - Syntax Highlighting (performance-optimized)
+
+    private var highlightWorkItem: DispatchWorkItem?
+    private let maxHighlightSize = 500_000  // Skip full highlighting for files > 500KB
+
+    private func scheduleHighlighting() {
+        highlightWorkItem?.cancel()
+        let item = DispatchWorkItem { [weak self] in
+            self?.applySyntaxHighlighting()
+        }
+        highlightWorkItem = item
+        // Debounce: wait 300ms after last keystroke before highlighting
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: item)
+    }
+
     private func applySyntaxHighlighting() {
         guard let ts = textView.textStorage else { return }
+
+        // Skip highlighting for very large files
+        guard ts.length < maxHighlightSize else { return }
+
         let language = documentManager.activeDocument?.language ?? "Normal Text"
         let rules = SyntaxRules.rules(for: language, theme: SyntaxTheme.defaultLight)
         guard !rules.isEmpty else { return }
 
-        let range = NSRange(location: 0, length: ts.length)
+        // Only highlight the visible range + some buffer for large files
+        let fullRange: NSRange
+        if ts.length > 100_000, let sv = textView.enclosingScrollView,
+           let lm = textView.layoutManager, let tc = textView.textContainer {
+            let visibleRect = sv.contentView.bounds
+            // Add generous buffer above and below visible area
+            let buffered = visibleRect.insetBy(dx: 0, dy: -visibleRect.height * 2)
+            let glyphRange = lm.glyphRange(forBoundingRect: buffered, in: tc)
+            fullRange = lm.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
+        } else {
+            fullRange = NSRange(location: 0, length: ts.length)
+        }
+
         let defaultFont = NSFont.monospacedSystemFont(ofSize: currentFontSize, weight: .regular)
 
         ts.beginEditing()
-        ts.addAttribute(.foregroundColor, value: NSColor.textColor, range: range)
-        ts.addAttribute(.font, value: defaultFont, range: range)
+        ts.addAttribute(.foregroundColor, value: NSColor.textColor, range: fullRange)
+        ts.addAttribute(.font, value: defaultFont, range: fullRange)
 
         for rule in rules {
             guard let regex = rule.regex else { continue }
-            regex.enumerateMatches(in: ts.string, range: range) { match, _, _ in
+            regex.enumerateMatches(in: ts.string, range: fullRange) { match, _, _ in
                 guard let mr = match?.range else { return }
                 ts.addAttribute(.foregroundColor, value: rule.color, range: mr)
                 if let trait = rule.fontTrait {
@@ -470,7 +499,9 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
     private func loadDocumentIntoEditor(_ doc: Document) {
         editorView.language = doc.language
         textView.string = doc.content
-        applySyntaxHighlighting()
+        if doc.content.count < maxHighlightSize {
+            applySyntaxHighlighting()
+        }
         updateStatusBar(for: doc)
         window?.title = "NotepadNext — \(doc.fileURL?.path ?? doc.title)"
     }
