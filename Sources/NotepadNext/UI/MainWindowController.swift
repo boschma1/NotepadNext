@@ -67,10 +67,11 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         textView.isAutomaticTextReplacementEnabled = false
         textView.isAutomaticSpellingCorrectionEnabled = false
         textView.smartInsertDeleteEnabled = false
-        textView.font = NSFont.monospacedSystemFont(ofSize: 13, weight: .regular)
-        textView.textColor = .textColor
-        textView.backgroundColor = .textBackgroundColor
-        textView.insertionPointColor = .textColor
+        let theme = ThemeManager.shared.currentTheme
+        textView.font = theme.editorFont
+        textView.textColor = theme.foreground
+        textView.backgroundColor = theme.background
+        textView.insertionPointColor = theme.caretColor
         textView.isHorizontallyResizable = true
         textView.textContainer?.widthTracksTextView = false
         textView.textContainer?.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
@@ -475,7 +476,7 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
 
     // MARK: - Zoom
 
-    private var currentFontSize: CGFloat = 13
+    private var currentFontSize: CGFloat = ThemeManager.shared.currentTheme.editorFont.pointSize
 
     func zoom(delta: Int) {
         currentFontSize = max(6, min(72, currentFontSize + CGFloat(delta)))
