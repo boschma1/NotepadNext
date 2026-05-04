@@ -4,7 +4,7 @@ import AppKit
 /// These mirror Notepad++ Edit menu operations.
 class EditorCommands {
 
-    private weak var textView: NSTextView?
+    private(set) weak var textView: NSTextView?
 
     init(textView: NSTextView) {
         self.textView = textView

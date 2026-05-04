@@ -24,12 +24,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         mainController = MainWindowController(window: window)
         mainController.setupContent()
 
+        // Restore previous session
+        SessionManager.shared.restoreSession(into: mainController.documentManager)
+
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool { true }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        SessionManager.shared.saveSession(from: mainController.documentManager)
+    }
 
     @objc func newDocument(_ sender: Any?) { mainController.documentManager.createNewDocument() }
     @objc func openDocument(_ sender: Any?) {
@@ -84,6 +91,29 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         case "Light": ThemeManager.shared.currentTheme = .light
         case "Dark": ThemeManager.shared.currentTheme = .dark
         default: ThemeManager.shared.currentTheme = .system
+        }
+    }
+    @objc func macroStartStop(_ sender: Any?) {
+        if MacroEngine.shared.isRecording {
+            MacroEngine.shared.stopRecording()
+        } else {
+            MacroEngine.shared.startRecording()
+        }
+    }
+    @objc func macroPlayback(_ sender: Any?) {
+        MacroEngine.shared.playback(on: mainController.editorCommands!.textView!)
+    }
+    @objc func macroPlayMultiple(_ sender: Any?) {
+        let alert = NSAlert()
+        alert.messageText = "Run Macro Multiple Times"
+        alert.informativeText = "How many times?"
+        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 100, height: 24))
+        field.stringValue = "10"
+        alert.accessoryView = field
+        alert.addButton(withTitle: "Run")
+        alert.addButton(withTitle: "Cancel")
+        if alert.runModal() == .alertFirstButtonReturn, let n = Int(field.stringValue), n > 0 {
+            MacroEngine.shared.playbackMultiple(times: n, on: mainController.editorCommands!.textView!)
         }
     }
 }
