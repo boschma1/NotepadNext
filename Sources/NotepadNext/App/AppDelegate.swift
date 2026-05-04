@@ -27,13 +27,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.minSize = NSSize(width: 400, height: 300)
 
         mainController = MainWindowController(window: window)
-        mainController.setupContent()
+        mainController.setupContent(createEmptyTab: pendingFiles.isEmpty)
 
         // Apply saved theme to editor
         ThemeManager.shared.applyTheme()
 
-        // Restore previous session
-        SessionManager.shared.restoreSession(into: mainController.documentManager)
+        // Restore previous session (only if no files pending)
+        if pendingFiles.isEmpty {
+            SessionManager.shared.restoreSession(into: mainController.documentManager)
+        }
 
         // Enable drag-and-drop of files onto the window
         window.registerForDraggedTypes([.fileURL])

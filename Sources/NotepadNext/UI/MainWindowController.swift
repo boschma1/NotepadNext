@@ -34,7 +34,7 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
     private var folderPanelWidth: CGFloat = 220
     private var documentMapWidth: CGFloat = 120
 
-    func setupContent() {
+    func setupContent(createEmptyTab: Bool = true) {
         guard let cv = window?.contentView else { return }
         let b = cv.bounds
 
@@ -103,7 +103,9 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         }
 
         documentManager.delegate = self
-        documentManager.createNewDocument()
+        if createEmptyTab {
+            documentManager.createNewDocument()
+        }
 
         // Handle tab context menu "Copy Path"
         NotificationCenter.default.addObserver(forName: .init("CopyTabPath"), object: nil, queue: .main) { [weak self] n in
