@@ -118,16 +118,22 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
     // MARK: - Syntax Highlighting (performance-optimized)
 
     private var highlightWorkItem: DispatchWorkItem?
-    private let maxHighlightSize = 500_000  // Skip full highlighting for files > 500KB
+    private let maxHighlightSize = 2_000_000  // Skip full highlighting for files > 2MB
 
     private func scheduleHighlighting() {
         highlightWorkItem?.cancel()
-        let item = DispatchWorkItem { [weak self] in
-            self?.applySyntaxHighlighting()
+
+        // Small files: highlight immediately. Larger files: debounce.
+        guard let ts = textView.textStorage else { return }
+        if ts.length < 50_000 {
+            applySyntaxHighlighting()
+        } else {
+            let item = DispatchWorkItem { [weak self] in
+                self?.applySyntaxHighlighting()
+            }
+            highlightWorkItem = item
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: item)
         }
-        highlightWorkItem = item
-        // Debounce: wait 300ms after last keystroke before highlighting
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: item)
     }
 
     private func applySyntaxHighlighting() {
