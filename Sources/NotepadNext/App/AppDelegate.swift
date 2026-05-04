@@ -40,20 +40,35 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+
+        // Open any files that were requested before launch completed
+        for f in pendingFiles {
+            mainController.documentManager.openDocument(at: URL(fileURLWithPath: f))
+        }
+        pendingFiles.removeAll()
     }
+
+    private var pendingFiles: [String] = []
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool { true }
 
     func application(_ sender: NSApplication, openFile filename: String) -> Bool {
-        let url = URL(fileURLWithPath: filename)
-        mainController.documentManager.openDocument(at: url)
+        if mainController != nil {
+            mainController.documentManager.openDocument(at: URL(fileURLWithPath: filename))
+        } else {
+            pendingFiles.append(filename)
+        }
         return true
     }
 
     func application(_ sender: NSApplication, openFiles filenames: [String]) {
         for f in filenames {
-            mainController.documentManager.openDocument(at: URL(fileURLWithPath: f))
+            if mainController != nil {
+                mainController.documentManager.openDocument(at: URL(fileURLWithPath: f))
+            } else {
+                pendingFiles.append(f)
+            }
         }
     }
 
