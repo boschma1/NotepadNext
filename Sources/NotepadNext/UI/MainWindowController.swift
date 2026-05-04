@@ -16,6 +16,8 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
 
     // Lightweight wrapper so the rest of the code can use editorView.text / .language
     var editorView: EditorViewAccessor!
+    private var currentLineHighlighter: CurrentLineHighlighter?
+    private var wordCompleter: WordCompleter?
 
     private let tabBarHeight: CGFloat = 30
     private let statusBarHeight: CGFloat = 22
@@ -66,11 +68,19 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         textView.delegate = self
 
         editorScrollView.documentView = textView
+
+        // Line number gutter
+        editorScrollView.rulersVisible = true
+        editorScrollView.hasVerticalRuler = true
+        editorScrollView.verticalRulerView = LineNumberGutter(scrollView: editorScrollView, textView: textView)
+
         cv.addSubview(editorScrollView)
 
         // Accessor for compatibility
         editorView = EditorViewAccessor(textView: textView)
         editorCommands = EditorCommands(textView: textView)
+        currentLineHighlighter = CurrentLineHighlighter(textView: textView)
+        wordCompleter = WordCompleter(textView: textView)
 
         documentManager.delegate = self
         documentManager.createNewDocument()
@@ -191,6 +201,19 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         doc.language = language
         editorView.language = language
         updateStatusBar(for: doc)
+    }
+
+    func triggerAutoComplete() {
+        wordCompleter?.complete()
+    }
+
+    func showHashTools() {
+        let sel = textView.selectedRange()
+        var selected: String? = nil
+        if sel.length > 0 {
+            selected = (textView.string as NSString).substring(with: sel)
+        }
+        HashTools.showHashDialog(selectedText: selected)
     }
 
     // MARK: - Zoom

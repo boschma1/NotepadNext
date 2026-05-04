@@ -13,6 +13,7 @@ class MenuManager {
         mainMenu.addItem(createEncodingMenu())
         mainMenu.addItem(createLanguageMenu())
         mainMenu.addItem(createMacroMenu())
+        mainMenu.addItem(createToolsMenu())
         mainMenu.addItem(createWindowMenu())
         mainMenu.addItem(createHelpMenu())
 
@@ -369,6 +370,28 @@ class MenuManager {
 
         langMenuItem.submenu = langMenu
         return langMenuItem
+    }
+
+    // MARK: - Tools Menu
+
+    private func createToolsMenu() -> NSMenuItem {
+        let toolsMenuItem = NSMenuItem()
+        let toolsMenu = NSMenu(title: "Tools")
+
+        toolsMenu.addItem(withTitle: "Generate Hash…",
+                          action: #selector(AppDelegate.showHashTools(_:)),
+                          keyEquivalent: "")
+
+        toolsMenu.addItem(.separator())
+
+        let autoComplete = NSMenuItem(title: "Auto-Complete",
+                                      action: #selector(AppDelegate.triggerAutoComplete(_:)),
+                                      keyEquivalent: " ")
+        autoComplete.keyEquivalentModifierMask = [.control]
+        toolsMenu.addItem(autoComplete)
+
+        toolsMenuItem.submenu = toolsMenu
+        return toolsMenuItem
     }
 
     // MARK: - Window Menu
