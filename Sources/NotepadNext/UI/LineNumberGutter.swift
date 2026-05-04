@@ -31,7 +31,6 @@ class LineNumberGutter: NSView {
         guard let tv = textView, let sv = scrollView,
               let lm = tv.layoutManager, let tc = tv.textContainer else { return }
 
-        // Background
         NSColor.controlBackgroundColor.setFill()
         bounds.fill()
         NSColor.separatorColor.setStroke()
@@ -45,48 +44,50 @@ class LineNumberGutter: NSView {
             .foregroundColor: NSColor.secondaryLabelColor
         ]
 
+        // Empty document: just draw "1"
         guard text.length > 0 else {
-            // Empty document: draw "1"
-            let s = "1" as NSString
-            let sz = s.size(withAttributes: attrs)
-            s.draw(at: NSPoint(x: bounds.width - sz.width - 6, y: 1), withAttributes: attrs)
+            drawNumber(1, y: 1, attrs: attrs)
             return
         }
 
-        // Ensure layout is complete
         lm.ensureLayout(for: tc)
 
+        // Iterate through each line using lineRange
         var lineNumber = 1
         var charIndex = 0
 
-        while charIndex <= text.length {
-            // Get the rect for this character position
-            let y: CGFloat
-            if charIndex < text.length {
-                let glyphIndex = lm.glyphIndexForCharacter(at: charIndex)
-                let fragRect = lm.lineFragmentRect(forGlyphAt: glyphIndex, effectiveRange: nil)
-                y = fragRect.minY - visibleRect.minY
-            } else {
-                // Last line after trailing newline: position below the last glyph
-                let lastGlyph = lm.glyphIndexForCharacter(at: text.length - 1)
-                let fragRect = lm.lineFragmentRect(forGlyphAt: lastGlyph, effectiveRange: nil)
-                y = fragRect.maxY - visibleRect.minY
-            }
+        while charIndex < text.length {
+            let lineRange = text.lineRange(for: NSRange(location: charIndex, length: 0))
+
+            let glyphIndex = lm.glyphIndexForCharacter(at: lineRange.location)
+            let fragRect = lm.lineFragmentRect(forGlyphAt: glyphIndex, effectiveRange: nil)
+            let y = fragRect.minY - visibleRect.minY
 
             if y >= -20 && y <= bounds.height + 20 {
-                let s = "\(lineNumber)" as NSString
-                let sz = s.size(withAttributes: attrs)
-                s.draw(at: NSPoint(x: bounds.width - sz.width - 6, y: y + 1), withAttributes: attrs)
+                drawNumber(lineNumber, y: y + 1, attrs: attrs)
             }
 
-            // Find next line
-            if charIndex >= text.length { break }
-            let lineRange = text.lineRange(for: NSRange(location: charIndex, length: 0))
+            lineNumber += 1
             let nextIndex = NSMaxRange(lineRange)
             if nextIndex <= charIndex { break }
-
-            lineNumber += 1
             charIndex = nextIndex
         }
+
+        // If text ends with \n, there's one more empty line to number
+        if text.character(at: text.length - 1) == 0x0A {
+            let lastGlyph = lm.glyphIndexForCharacter(at: text.length - 1)
+            let fragRect = lm.lineFragmentRect(forGlyphAt: lastGlyph, effectiveRange: nil)
+            let y = fragRect.maxY - visibleRect.minY
+
+            if y >= -20 && y <= bounds.height + 20 {
+                drawNumber(lineNumber, y: y + 1, attrs: attrs)
+            }
+        }
+    }
+
+    private func drawNumber(_ n: Int, y: CGFloat, attrs: [NSAttributedString.Key: Any]) {
+        let s = "\(n)" as NSString
+        let sz = s.size(withAttributes: attrs)
+        s.draw(at: NSPoint(x: bounds.width - sz.width - 6, y: y), withAttributes: attrs)
     }
 }
