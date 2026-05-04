@@ -115,6 +115,11 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(path, forType: .string)
         }
+
+        // Keep word wrap width in sync with window resize
+        NotificationCenter.default.addObserver(forName: NSWindow.didResizeNotification, object: window, queue: .main) { [weak self] _ in
+            self?.windowDidResize()
+        }
     }
 
     // MARK: - NSTextViewDelegate
@@ -189,16 +194,9 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         let wasWrapping = wordWrapEnabled
         ts.endEditing()
 
-        // Restore wrap state if it was on (endEditing can reset container)
+        // Restore wrap state if it was on (endEditing resets container)
         if wasWrapping {
-            guard let container = textView.textContainer,
-                  let sv = textView.enclosingScrollView else { return }
-            let contentWidth = sv.contentSize.width
-            container.widthTracksTextView = true
-            container.containerSize = NSSize(width: contentWidth, height: CGFloat.greatestFiniteMagnitude)
-            textView.isHorizontallyResizable = false
-            textView.maxSize = NSSize(width: contentWidth, height: CGFloat.greatestFiniteMagnitude)
-            textView.frame.size.width = contentWidth
+            windowDidResize()
         }
     }
 
@@ -523,22 +521,33 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
               let sv = textView.enclosingScrollView else { return }
 
         if wordWrapEnabled {
-            let contentWidth = sv.contentSize.width
-            container.widthTracksTextView = true
-            container.containerSize = NSSize(width: contentWidth, height: CGFloat.greatestFiniteMagnitude)
-            textView.isHorizontallyResizable = false
-            textView.autoresizingMask = [.width]
-            textView.maxSize = NSSize(width: contentWidth, height: CGFloat.greatestFiniteMagnitude)
-            textView.frame.size.width = contentWidth
-        } else {
+            // Word wrap ON: text view width tracks scroll view width
             container.widthTracksTextView = false
-            container.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+            textView.isHorizontallyResizable = false
+            let w = sv.contentSize.width - container.lineFragmentPadding * 2
+            container.containerSize = NSSize(width: w, height: CGFloat.greatestFiniteMagnitude)
+            textView.maxSize = NSSize(width: w, height: CGFloat.greatestFiniteMagnitude)
+            textView.frame.size.width = sv.contentSize.width
+            sv.hasHorizontalScroller = false
+        } else {
+            // Word wrap OFF: text view expands horizontally
+            container.widthTracksTextView = false
             textView.isHorizontallyResizable = true
-            textView.autoresizingMask = [.width]
+            container.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
             textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+            sv.hasHorizontalScroller = true
         }
-        textView.needsLayout = true
-        textView.needsDisplay = true
+    }
+
+    /// Called when window resizes to keep wrap width in sync
+    func windowDidResize() {
+        guard wordWrapEnabled,
+              let container = textView.textContainer,
+              let sv = textView.enclosingScrollView else { return }
+        let w = sv.contentSize.width - container.lineFragmentPadding * 2
+        container.containerSize = NSSize(width: w, height: CGFloat.greatestFiniteMagnitude)
+        textView.maxSize = NSSize(width: w, height: CGFloat.greatestFiniteMagnitude)
+        textView.frame.size.width = sv.contentSize.width
     }
 
     // MARK: - Encoding
