@@ -85,5 +85,21 @@ class LineNumberGutter: NSView {
             if next <= index { break }
             index = next
         }
+
+        // Draw line number for the final empty line (after trailing newline or empty document)
+        if content.length == 0 || content.character(at: content.length - 1) == 0x0A {
+            let extraGlyphIndex = lm.glyphIndexForCharacter(at: max(0, content.length - 1))
+            var lineRect = lm.lineFragmentRect(forGlyphAt: extraGlyphIndex, effectiveRange: nil)
+            // Position below the last line
+            if content.length > 0 {
+                lineRect.origin.y = lineRect.maxY
+            }
+            let y = lineRect.origin.y - visibleRect.minY
+            if y >= -20 && y <= bounds.height + 20 {
+                let str = "\(lineNum)" as NSString
+                let sz = str.size(withAttributes: attrs)
+                str.draw(at: NSPoint(x: bounds.width - sz.width - 6, y: y + 1), withAttributes: attrs)
+            }
+        }
     }
 }
