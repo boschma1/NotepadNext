@@ -57,7 +57,7 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         editorScrollView.hasVerticalScroller = true
         editorScrollView.hasHorizontalScroller = true
 
-        textView = NSTextView(frame: editorScrollView.contentView.bounds)
+        textView = PlainTextView(frame: editorScrollView.contentView.bounds)
         textView.autoresizingMask = [.width]
         textView.isEditable = true
         textView.isSelectable = true
