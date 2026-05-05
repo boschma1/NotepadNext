@@ -54,7 +54,7 @@ class DocumentManager {
         guard index >= 0, index < documents.count else { return false }
 
         let doc = documents[index]
-        if doc.isModified {
+        if doc.isModified && !doc.content.isEmpty {
             let alert = NSAlert()
             alert.messageText = "Save changes to \"\(doc.title)\"?"
             alert.informativeText = "Your changes will be lost if you don't save them."
