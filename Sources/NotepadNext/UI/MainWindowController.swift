@@ -371,9 +371,9 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
     func saveCurrentDocument() {
         guard let doc = documentManager.activeDocument else { return }
         doc.content = textView.string
-        if doc.fileURL == nil { saveCurrentDocumentAs(); return }
+        guard let _ = doc.fileURL else { saveCurrentDocumentAs(); return }
         do { try doc.save(); updateTabTitle(for: doc) }
-        catch { NSAlert(error: error).runModal() }
+        catch { saveCurrentDocumentAs() }
     }
 
     func saveCurrentDocumentAs() {
