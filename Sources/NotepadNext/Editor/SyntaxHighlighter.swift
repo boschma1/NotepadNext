@@ -239,15 +239,28 @@ struct SyntaxRules {
     private static func shellRules(theme: SyntaxTheme) -> [SyntaxHighlighter.HighlightRule] {
         let kw = ["if", "then", "else", "elif", "fi", "for", "while", "do", "done",
                    "case", "esac", "function", "return", "exit", "export", "local",
-                   "in", "select", "until", "source"]
+                   "in", "select", "until", "source", "true", "false"]
+        let builtins = ["echo", "printf", "cd", "pwd", "ls", "cp", "mv", "rm", "mkdir", "rmdir",
+                        "cat", "head", "tail", "grep", "sed", "awk", "find", "sort", "uniq",
+                        "wc", "cut", "tr", "xargs", "tee", "read", "eval", "exec", "set",
+                        "unset", "shift", "test", "chmod", "chown", "chgrp", "touch", "ln",
+                        "tar", "gzip", "gunzip", "zip", "unzip", "curl", "wget", "ssh", "scp",
+                        "kill", "ps", "top", "df", "du", "mount", "umount", "apt", "brew",
+                        "pip", "npm", "git", "docker", "sudo", "su", "open", "xattr",
+                        "codesign", "pbcopy", "pbpaste", "defaults", "launchctl"]
         let kwPattern = "\\b(" + kw.joined(separator: "|") + ")\\b"
+        let builtinPattern = "(?:^|(?<=\\s|;|\\|\\||&&))(" + builtins.joined(separator: "|") + ")\\b"
 
         return [
+            .init(pattern: "^#!.*$", options: [.anchorsMatchLines], color: theme.preprocessorColor, fontTrait: nil),
             .init(pattern: "#.*$", options: [.anchorsMatchLines], color: theme.commentColor, fontTrait: .italicFontMask),
             .init(pattern: "\"(?:[^\"\\\\]|\\\\.)*\"", options: [], color: theme.stringColor, fontTrait: nil),
             .init(pattern: "'[^']*'", options: [], color: theme.stringColor, fontTrait: nil),
-            .init(pattern: "\\$\\{?\\w+\\}?", options: [], color: theme.typeColor, fontTrait: nil),
+            .init(pattern: "\\$\\{?[\\w@#?!*-]+\\}?", options: [], color: theme.typeColor, fontTrait: nil),
             .init(pattern: kwPattern, options: [], color: theme.keywordColor, fontTrait: .boldFontMask),
+            .init(pattern: builtinPattern, options: [.anchorsMatchLines], color: theme.numberColor, fontTrait: nil),
+            .init(pattern: "(?:^|\\s)(-{1,2}[\\w-]+)", options: [.anchorsMatchLines], color: theme.typeColor, fontTrait: nil),
+            .init(pattern: "[/~][\\w./-]+", options: [], color: theme.stringColor, fontTrait: nil),
         ]
     }
 
