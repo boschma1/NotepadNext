@@ -56,8 +56,10 @@ class TabBarView: NSView {
 
         var x: CGFloat = 4
         for (i, tab) in tabs.enumerated() {
-            let btn = NSButton(title: tab.title, target: self, action: #selector(tabClicked(_:)))
+            let btn = DraggableTabButton(title: tab.title, target: self, action: #selector(tabClicked(_:)))
             btn.tag = i
+            btn.tabBarView = self
+            btn.tabIndex = i
             btn.bezelStyle = .accessoryBarAction
             btn.sizeToFit()
             btn.frame = NSRect(x: x, y: 2, width: btn.frame.width + 20, height: bounds.height - 4)
@@ -87,72 +89,16 @@ class TabBarView: NSView {
         addSubview(addBtn)
     }
 
+    func handleTabDragOut(at index: Int) {
+        delegate?.tabBarView(self, didDragOutTabAt: index)
+    }
+
     @objc private func tabClicked(_ sender: NSButton) {
         delegate?.tabBarView(self, didSelectTabAt: sender.tag)
     }
 
     @objc private func closeClicked(_ sender: NSButton) {
         delegate?.tabBarView(self, didCloseTabAt: sender.tag)
-    }
-
-    // MARK: - Drag tab out to new instance
-
-    private var dragStartPoint: NSPoint?
-    private var dragTabIndex: Int?
-    private var isDragging = false
-
-    private func tabIndexAt(point: NSPoint) -> Int? {
-        for sub in subviews {
-            if let btn = sub as? NSButton, btn.action == #selector(tabClicked(_:)),
-               btn.frame.contains(point) {
-                return btn.tag
-            }
-        }
-        return nil
-    }
-
-    override func mouseDown(with event: NSEvent) {
-        let point = convert(event.locationInWindow, from: nil)
-        isDragging = false
-
-        if let idx = tabIndexAt(point: point) {
-            dragStartPoint = event.locationInWindow
-            dragTabIndex = idx
-            // Select the tab immediately
-            delegate?.tabBarView(self, didSelectTabAt: idx)
-        } else {
-            dragStartPoint = nil
-            dragTabIndex = nil
-            super.mouseDown(with: event)
-        }
-    }
-
-    override func mouseDragged(with event: NSEvent) {
-        guard let startPoint = dragStartPoint, let _ = dragTabIndex else {
-            super.mouseDragged(with: event)
-            return
-        }
-
-        let distance = abs(event.locationInWindow.y - startPoint.y)
-        if distance > 30 && !isDragging {
-            isDragging = true
-            NSCursor.openHand.set()
-        }
-    }
-
-    override func mouseUp(with event: NSEvent) {
-        if isDragging, let tabIdx = dragTabIndex {
-            NSCursor.arrow.set()
-            // Check if mouse is outside the tab bar
-            let point = convert(event.locationInWindow, from: nil)
-            if !bounds.contains(point) {
-                delegate?.tabBarView(self, didDragOutTabAt: tabIdx)
-            }
-        }
-        dragStartPoint = nil
-        dragTabIndex = nil
-        isDragging = false
-        super.mouseUp(with: event)
     }
 
     override func menu(for event: NSEvent) -> NSMenu? {
@@ -214,5 +160,30 @@ class TabBarView: NSView {
 
     @objc private func addClicked() {
         delegate?.tabBarViewDidRequestNewTab(self)
+    }
+}
+
+/// NSButton subclass that detects drag-out gesture on tab buttons.
+class DraggableTabButton: NSButton {
+    weak var tabBarView: TabBarView?
+    var tabIndex: Int = 0
+
+    private var dragStart: NSPoint?
+
+    override func mouseDown(with event: NSEvent) {
+        dragStart = event.locationInWindow
+        super.mouseDown(with: event)
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard let start = dragStart else { return }
+        let dy = abs(event.locationInWindow.y - start.y)
+        if dy > 30 {
+            dragStart = nil
+            NSCursor.arrow.set()
+            tabBarView?.handleTabDragOut(at: tabIndex)
+            return
+        }
+        super.mouseDragged(with: event)
     }
 }
