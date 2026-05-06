@@ -102,6 +102,9 @@ class SessionManager {
                                 if let modified = try? String(contentsOf: contentURL, encoding: .utf8) {
                                     doc.content = modified
                                     doc.isModified = true
+                                    if let idx = documentManager.documents.firstIndex(where: { $0.id == doc.id }) {
+                                        documentManager.delegate?.documentManager(documentManager, didUpdateDocument: doc, at: idx)
+                                    }
                                 }
                             }
                             restoredAny = true
@@ -115,6 +118,9 @@ class SessionManager {
                         doc.content = content
                         doc.language = entry.language
                         doc.isModified = true
+                        if let idx = documentManager.documents.firstIndex(where: { $0.id == doc.id }) {
+                            documentManager.delegate?.documentManager(documentManager, didUpdateDocument: doc, at: idx)
+                        }
                         restoredAny = true
                     }
                 }
