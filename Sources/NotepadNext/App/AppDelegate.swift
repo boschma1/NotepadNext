@@ -75,6 +75,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        // Sync current editor content to active document before saving session
+        if let doc = mainController.documentManager.activeDocument {
+            doc.content = mainController.textView.string
+        }
         SessionManager.shared.saveSession(from: mainController.documentManager)
     }
 
