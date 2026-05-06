@@ -721,7 +721,7 @@ extension MainWindowController: TabBarViewDelegate {
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: appPath)
-        process.arguments = ["--new-instance", tempFile.path]
+        process.arguments = ["--new-instance", "--title", doc.title, tempFile.path]
         try? process.run()
 
         // Force-close the tab without save prompt

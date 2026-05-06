@@ -45,13 +45,34 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
 
         // Open any files that were requested before launch completed
+        let customTitle = parsedTitle()
         for f in pendingFiles {
-            mainController.documentManager.openDocument(at: URL(fileURLWithPath: f))
+            if let doc = mainController.documentManager.openDocument(at: URL(fileURLWithPath: f)) {
+                if let title = customTitle {
+                    doc.title = title
+                    // If it was an unsaved doc (temp file), clear the fileURL so it acts as unsaved
+                    if f.contains(FileManager.default.temporaryDirectory.path) {
+                        doc.fileURL = nil
+                    }
+                    if let idx = mainController.documentManager.documents.firstIndex(where: { $0.id == doc.id }) {
+                        mainController.documentManager.delegate?.documentManager(
+                            mainController.documentManager, didUpdateDocument: doc, at: idx)
+                    }
+                }
+            }
         }
         pendingFiles.removeAll()
     }
 
     private var pendingFiles: [String] = []
+
+    private func parsedTitle() -> String? {
+        let args = CommandLine.arguments
+        if let titleIdx = args.firstIndex(of: "--title"), titleIdx + 1 < args.count {
+            return args[titleIdx + 1]
+        }
+        return nil
+    }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool { true }
