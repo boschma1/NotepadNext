@@ -43,6 +43,7 @@ class DocumentManager {
             try doc.load()
             doc.language = detectLanguage(for: url)
             addDocument(doc)
+            RecentFilesManager.shared.addFile(url)
             return doc
         } catch {
             NSAlert(error: error).runModal()

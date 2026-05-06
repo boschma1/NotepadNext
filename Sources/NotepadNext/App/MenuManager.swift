@@ -80,6 +80,13 @@ class MenuManager {
                          action: #selector(AppDelegate.openDocument(_:)),
                          keyEquivalent: "o")
 
+        // Recent Files submenu
+        let recentMenu = NSMenu(title: "Recent Files")
+        recentMenu.delegate = RecentFilesMenuDelegate.shared
+        let recentItem = NSMenuItem(title: "Recent Files", action: nil, keyEquivalent: "")
+        recentItem.submenu = recentMenu
+        fileMenu.addItem(recentItem)
+
         fileMenu.addItem(.separator())
 
         fileMenu.addItem(withTitle: "Save",
