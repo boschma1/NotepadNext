@@ -14,6 +14,15 @@ class SessionManager {
         AppConfig.configDirectory.appendingPathComponent("unsaved")
     }
 
+    func hasSession() -> Bool {
+        guard FileManager.default.fileExists(atPath: sessionURL.path),
+              let data = try? Data(contentsOf: sessionURL),
+              let session = try? JSONDecoder().decode(SessionData.self, from: data) else {
+            return false
+        }
+        return !session.files.isEmpty
+    }
+
     struct SessionData: Codable {
         struct FileEntry: Codable {
             let path: String?       // nil for unsaved documents

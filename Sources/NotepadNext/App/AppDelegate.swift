@@ -27,7 +27,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.minSize = NSSize(width: 400, height: 300)
 
         mainController = MainWindowController(window: window)
-        mainController.setupContent(createEmptyTab: pendingFiles.isEmpty)
+        let hasSession = SessionManager.shared.hasSession()
+        mainController.setupContent(createEmptyTab: pendingFiles.isEmpty && !hasSession)
 
         // Apply saved theme to editor
         ThemeManager.shared.applyTheme()
