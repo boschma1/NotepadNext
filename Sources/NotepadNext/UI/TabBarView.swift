@@ -164,26 +164,37 @@ class TabBarView: NSView {
 }
 
 /// NSButton subclass that detects drag-out gesture on tab buttons.
+/// Uses a custom event tracking loop since NSButton's mouseDown blocks mouseDragged.
 class DraggableTabButton: NSButton {
     weak var tabBarView: TabBarView?
     var tabIndex: Int = 0
 
-    private var dragStart: NSPoint?
-
     override func mouseDown(with event: NSEvent) {
-        dragStart = event.locationInWindow
-        super.mouseDown(with: event)
-    }
+        let startPoint = event.locationInWindow
 
-    override func mouseDragged(with event: NSEvent) {
-        guard let start = dragStart else { return }
-        let dy = abs(event.locationInWindow.y - start.y)
-        if dy > 30 {
-            dragStart = nil
-            NSCursor.arrow.set()
-            tabBarView?.handleTabDragOut(at: tabIndex)
-            return
+        // Run our own event tracking loop
+        var didDragOut = false
+        while true {
+            guard let nextEvent = window?.nextEvent(matching: [.leftMouseUp, .leftMouseDragged]) else { break }
+
+            if nextEvent.type == .leftMouseUp {
+                break
+            }
+
+            if nextEvent.type == .leftMouseDragged {
+                let dy = abs(nextEvent.locationInWindow.y - startPoint.y)
+                if dy > 30 {
+                    didDragOut = true
+                    break
+                }
+            }
         }
-        super.mouseDragged(with: event)
+
+        if didDragOut {
+            tabBarView?.handleTabDragOut(at: tabIndex)
+        } else {
+            // Normal click — select the tab
+            sendAction(action, to: target)
+        }
     }
 }
