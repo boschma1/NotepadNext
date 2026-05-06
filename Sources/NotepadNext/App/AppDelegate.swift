@@ -42,6 +42,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.registerForDraggedTypes([.fileURL])
 
         window.makeKeyAndOrderFront(nil)
+
+        // Position window if --origin was specified
+        if let origin = parsedOrigin() {
+            window.setFrameOrigin(origin)
+        }
+
         NSApp.activate(ignoringOtherApps: true)
 
         // Open any files that were requested before launch completed
@@ -76,12 +82,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return nil
     }
 
+    private func parsedOrigin() -> NSPoint? {
+        let args = CommandLine.arguments
+        if let idx = args.firstIndex(of: "--origin"), idx + 1 < args.count {
+            let parts = args[idx + 1].split(separator: ",")
+            if parts.count == 2, let x = Double(parts[0]), let y = Double(parts[1]) {
+                return NSPoint(x: x, y: y)
+            }
+        }
+        return nil
+    }
+
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool { true }
 
     func application(_ sender: NSApplication, openFile filename: String) -> Bool {
-        // Skip args from --title flag
-        if isPartOfTitleArg(filename) { return true }
+        if isSpecialArg(filename) { return true }
         if mainController != nil {
             mainController.documentManager.openDocument(at: URL(fileURLWithPath: filename))
         } else {
@@ -92,7 +108,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func application(_ sender: NSApplication, openFiles filenames: [String]) {
         for f in filenames {
-            if isPartOfTitleArg(f) { continue }
+            if isSpecialArg(f) { continue }
             if mainController != nil {
                 mainController.documentManager.openDocument(at: URL(fileURLWithPath: f))
             } else {
@@ -101,10 +117,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func isPartOfTitleArg(_ filename: String) -> Bool {
+    private func isSpecialArg(_ filename: String) -> Bool {
         let args = CommandLine.arguments
-        if let idx = args.firstIndex(of: "--title"), idx + 1 < args.count {
-            return args[idx + 1] == filename
+        for flag in ["--title", "--origin"] {
+            if let idx = args.firstIndex(of: flag), idx + 1 < args.count, args[idx + 1] == filename {
+                return true
+            }
         }
         return false
     }
