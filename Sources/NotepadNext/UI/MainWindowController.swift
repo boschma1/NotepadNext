@@ -691,6 +691,46 @@ extension MainWindowController: TabBarViewDelegate {
         documentManager.activeDocument?.content = textView.string
         documentManager.createNewDocument()
     }
+
+    func tabBarView(_ tabBar: TabBarView, didDragOutTabAt index: Int) {
+        moveTabToNewInstance(at: index)
+    }
+
+    private func moveTabToNewInstance(at index: Int) {
+        guard let doc = documentManager.documents[safe: index] else { return }
+
+        // Sync content if it's the active document
+        if index == documentManager.activeIndex {
+            doc.content = textView.string
+        }
+
+        // Save content to a temp file
+        let tempDir = FileManager.default.temporaryDirectory
+        let tempFile: URL
+
+        if let fileURL = doc.fileURL {
+            // Already saved — just pass the path
+            tempFile = fileURL
+        } else {
+            // Unsaved — write to temp
+            let name = doc.title.replacingOccurrences(of: " ", with: "_") + ".txt"
+            tempFile = tempDir.appendingPathComponent(name)
+            try? doc.content.write(to: tempFile, atomically: true, encoding: .utf8)
+        }
+
+        // Launch a new instance with the file
+        let appPath = Bundle.main.bundlePath.isEmpty
+            ? ProcessInfo.processInfo.arguments[0]
+            : Bundle.main.bundlePath + "/Contents/MacOS/NotepadNext"
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: appPath)
+        process.arguments = ["--new-instance", tempFile.path]
+        try? process.run()
+
+        // Close the tab in this instance
+        _ = documentManager.closeDocument(at: index)
+    }
 }
 
 // MARK: - FolderWorkspaceDelegate

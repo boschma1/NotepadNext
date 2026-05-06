@@ -4,6 +4,7 @@ protocol TabBarViewDelegate: AnyObject {
     func tabBarView(_ tabBar: TabBarView, didSelectTabAt index: Int)
     func tabBarView(_ tabBar: TabBarView, didCloseTabAt index: Int)
     func tabBarViewDidRequestNewTab(_ tabBar: TabBarView)
+    func tabBarView(_ tabBar: TabBarView, didDragOutTabAt index: Int)
 }
 
 class TabBarView: NSView {
@@ -94,6 +95,49 @@ class TabBarView: NSView {
         delegate?.tabBarView(self, didCloseTabAt: sender.tag)
     }
 
+    // MARK: - Drag tab out to new instance
+
+    private var dragStartPoint: NSPoint?
+    private var dragTabIndex: Int?
+
+    override func mouseDown(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        dragStartPoint = point
+        dragTabIndex = nil
+
+        // Find which tab was clicked
+        for sub in subviews {
+            if let btn = sub as? NSButton, btn.frame.contains(point) {
+                dragTabIndex = btn.tag
+                break
+            }
+        }
+        super.mouseDown(with: event)
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard let startPoint = dragStartPoint, let tabIdx = dragTabIndex else {
+            super.mouseDragged(with: event)
+            return
+        }
+
+        let currentPoint = convert(event.locationInWindow, from: nil)
+        let distance = abs(currentPoint.y - startPoint.y)
+
+        // If dragged far enough vertically (outside the tab bar)
+        if distance > 40 {
+            dragStartPoint = nil
+            dragTabIndex = nil
+            delegate?.tabBarView(self, didDragOutTabAt: tabIdx)
+        }
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        dragStartPoint = nil
+        dragTabIndex = nil
+        super.mouseUp(with: event)
+    }
+
     override func menu(for event: NSEvent) -> NSMenu? {
         let point = convert(event.locationInWindow, from: nil)
         // Find which tab was right-clicked
@@ -118,6 +162,13 @@ class TabBarView: NSView {
                     copyPath.target = self
                     menu.addItem(copyPath)
 
+                    menu.addItem(.separator())
+
+                    let moveToNew = NSMenuItem(title: "Move to New Instance", action: #selector(contextMoveToNewInstance(_:)), keyEquivalent: "")
+                    moveToNew.tag = i
+                    moveToNew.target = self
+                    menu.addItem(moveToNew)
+
                     return menu
                 }
             }
@@ -137,8 +188,11 @@ class TabBarView: NSView {
     }
 
     @objc private func contextCopyPath(_ sender: NSMenuItem) {
-        // Delegate will handle this via notification
         NotificationCenter.default.post(name: .init("CopyTabPath"), object: sender.tag)
+    }
+
+    @objc private func contextMoveToNewInstance(_ sender: NSMenuItem) {
+        delegate?.tabBarView(self, didDragOutTabAt: sender.tag)
     }
 
     @objc private func addClicked() {
