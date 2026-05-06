@@ -11,6 +11,10 @@ class Document {
     var language: String
     var isModified: Bool = false
     var cursorPosition: Int = 0
+    var wordWrapEnabled: Bool = false
+    var usesSpaces: Bool = false
+    var tabSize: Int = 4
+    var isPinned: Bool = false
 
     enum LineEnding: String {
         case unix = "LF"

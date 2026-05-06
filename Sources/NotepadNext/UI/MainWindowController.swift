@@ -517,11 +517,16 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
 
     func toggleWordWrap() {
         wordWrapEnabled.toggle()
+        // Save per-tab
+        documentManager.activeDocument?.wordWrapEnabled = wordWrapEnabled
+        applyWordWrap()
+    }
+
+    private func applyWordWrap() {
         guard let container = textView.textContainer,
               let sv = textView.enclosingScrollView else { return }
 
         if wordWrapEnabled {
-            // Word wrap ON: text view width tracks scroll view width
             container.widthTracksTextView = false
             textView.isHorizontallyResizable = false
             let w = sv.contentSize.width - container.lineFragmentPadding * 2
@@ -530,7 +535,6 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
             textView.frame.size.width = sv.contentSize.width
             sv.hasHorizontalScroller = false
         } else {
-            // Word wrap OFF: text view expands horizontally
             container.widthTracksTextView = false
             textView.isHorizontallyResizable = true
             container.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
@@ -541,13 +545,8 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
 
     /// Called when window resizes to keep wrap width in sync
     func windowDidResize() {
-        guard wordWrapEnabled,
-              let container = textView.textContainer,
-              let sv = textView.enclosingScrollView else { return }
-        let w = sv.contentSize.width - container.lineFragmentPadding * 2
-        container.containerSize = NSSize(width: w, height: CGFloat.greatestFiniteMagnitude)
-        textView.maxSize = NSSize(width: w, height: CGFloat.greatestFiniteMagnitude)
-        textView.frame.size.width = sv.contentSize.width
+        guard wordWrapEnabled else { return }
+        applyWordWrap()
     }
 
     // MARK: - Encoding
@@ -591,6 +590,11 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         if doc.content.count < maxHighlightSize {
             applySyntaxHighlighting()
         }
+        // Restore per-tab word wrap
+        if doc.wordWrapEnabled != wordWrapEnabled {
+            wordWrapEnabled = doc.wordWrapEnabled
+            applyWordWrap()
+        }
         updateStatusBar(for: doc)
         window?.title = "NotepadNext — \(doc.fileURL?.path ?? doc.title)"
     }
@@ -605,9 +609,38 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         let enc: String = { switch doc.encoding {
         case .utf8: return "UTF-8"; case .utf16: return "UTF-16"
         case .ascii: return "ASCII"; default: return "ANSI" } }()
+
+        // Detect indentation from content
+        let indent = detectIndentation(text)
+        doc.usesSpaces = indent.usesSpaces
+        doc.tabSize = indent.size
+        let indentStr = indent.usesSpaces ? "Spaces: \(indent.size)" : "Tabs"
+
         statusBarView.update(line: lc.count, column: (lc.last?.count ?? 0) + 1,
                              length: text.count, lines: lines, words: words,
-                             encoding: enc, lineEnding: doc.lineEnding.rawValue, language: doc.language)
+                             encoding: enc, lineEnding: doc.lineEnding.rawValue, language: doc.language,
+                             indentation: indentStr)
+    }
+
+    private func detectIndentation(_ text: String) -> (usesSpaces: Bool, size: Int) {
+        var spaceLines = 0
+        var tabLines = 0
+        var commonSpaces = 0
+        let lines = text.components(separatedBy: .newlines).prefix(100) // Sample first 100 lines
+
+        for line in lines {
+            if line.hasPrefix("\t") { tabLines += 1 }
+            else if line.hasPrefix("  ") {
+                spaceLines += 1
+                let count = line.prefix(while: { $0 == " " }).count
+                if commonSpaces == 0 { commonSpaces = count }
+                else { commonSpaces = min(commonSpaces, count) }
+            }
+        }
+
+        if tabLines > spaceLines { return (false, 4) }
+        if commonSpaces > 0 { return (true, min(commonSpaces, 8)) }
+        return (false, 4)
     }
 
     private func updateTabTitle(for doc: Document) {

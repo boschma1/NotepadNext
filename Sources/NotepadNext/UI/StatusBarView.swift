@@ -31,7 +31,8 @@ class StatusBarView: NSView {
     }
 
     func update(line: Int, column: Int, length: Int, lines: Int, words: Int,
-                encoding: String, lineEnding: String, language: String) {
-        label.stringValue = "Ln \(line), Col \(column) │ Words: \(words)  Length: \(length)  Lines: \(lines) │ \(encoding) │ \(lineEnding) │ \(language)"
+                encoding: String, lineEnding: String, language: String,
+                indentation: String) {
+        label.stringValue = "Ln \(line), Col \(column) │ Words: \(words)  Length: \(length)  Lines: \(lines) │ \(indentation) │ \(encoding) │ \(lineEnding) │ \(language)"
     }
 }

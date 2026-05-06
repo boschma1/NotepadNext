@@ -141,6 +141,10 @@ struct SyntaxRules {
             return sqlRules(theme: theme)
         case "Markdown":
             return markdownRules(theme: theme)
+        case "Dart":
+            return cStyleRules(theme: theme, keywords: dartKeywords, types: dartTypes)
+        case "Kotlin":
+            return cStyleRules(theme: theme, keywords: kotlinKeywords, types: kotlinTypes)
         default:
             return []
         }
@@ -412,4 +416,31 @@ struct SyntaxRules {
 
     private static let phpTypes = ["int", "float", "string", "bool", "array", "object",
         "callable", "iterable", "void", "mixed", "never", "null"]
+
+    private static let dartKeywords = ["abstract", "as", "assert", "async", "await", "break",
+        "case", "catch", "class", "const", "continue", "covariant", "default", "deferred",
+        "do", "dynamic", "else", "enum", "export", "extends", "extension", "external",
+        "factory", "false", "final", "finally", "for", "Function", "get", "hide", "if",
+        "implements", "import", "in", "interface", "is", "late", "library", "mixin", "new",
+        "null", "on", "operator", "part", "required", "rethrow", "return", "sealed", "set",
+        "show", "static", "super", "switch", "sync", "this", "throw", "true", "try",
+        "typedef", "var", "void", "while", "with", "yield"]
+
+    private static let dartTypes = ["int", "double", "String", "bool", "List", "Map", "Set",
+        "Future", "Stream", "Iterable", "dynamic", "Object", "Type", "Symbol", "Null",
+        "Duration", "DateTime", "Uri", "BigInt", "RegExp"]
+
+    private static let kotlinKeywords = ["abstract", "actual", "annotation", "as", "break",
+        "by", "catch", "class", "companion", "const", "constructor", "continue", "crossinline",
+        "data", "delegate", "do", "else", "enum", "expect", "external", "false", "final",
+        "finally", "for", "fun", "get", "if", "import", "in", "infix", "init", "inline",
+        "inner", "interface", "internal", "is", "it", "lateinit", "noinline", "null",
+        "object", "open", "operator", "out", "override", "package", "private", "protected",
+        "public", "reified", "return", "sealed", "set", "super", "suspend", "tailrec",
+        "this", "throw", "true", "try", "typealias", "typeof", "val", "var", "vararg",
+        "when", "where", "while"]
+
+    private static let kotlinTypes = ["Int", "Long", "Short", "Byte", "Float", "Double",
+        "Char", "Boolean", "String", "Array", "List", "Map", "Set", "Unit", "Nothing",
+        "Any", "Pair", "Triple", "Sequence"]
 }

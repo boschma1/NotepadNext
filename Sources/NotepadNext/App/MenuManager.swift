@@ -380,8 +380,8 @@ class MenuManager {
         let langMenu = NSMenu(title: "Language")
 
         let languages: [(String, [String])] = [
-            ("Common", ["Normal Text", "C", "C++", "C#", "CSS", "Go", "HTML", "Java",
-                        "JavaScript", "JSON", "Markdown", "Objective-C", "PHP", "Python",
+            ("Common", ["Normal Text", "C", "C++", "C#", "CSS", "Dart", "Go", "HTML", "Java",
+                        "JavaScript", "JSON", "Kotlin", "Markdown", "Objective-C", "PHP", "Python",
                         "Ruby", "Rust", "Shell", "SQL", "Swift", "TypeScript", "XML", "YAML"]),
         ]
 
