@@ -709,26 +709,23 @@ extension MainWindowController: TabBarViewDelegate {
         let tempFile: URL
 
         if let fileURL = doc.fileURL {
-            // Already saved — just pass the path
             tempFile = fileURL
         } else {
-            // Unsaved — write to temp
             let name = doc.title.replacingOccurrences(of: " ", with: "_") + ".txt"
             tempFile = tempDir.appendingPathComponent(name)
             try? doc.content.write(to: tempFile, atomically: true, encoding: .utf8)
         }
 
         // Launch a new instance with the file
-        let appPath = Bundle.main.bundlePath.isEmpty
-            ? ProcessInfo.processInfo.arguments[0]
-            : Bundle.main.bundlePath + "/Contents/MacOS/NotepadNext"
+        let appPath = Bundle.main.executablePath ?? ProcessInfo.processInfo.arguments[0]
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: appPath)
         process.arguments = ["--new-instance", tempFile.path]
         try? process.run()
 
-        // Close the tab in this instance
+        // Force-close the tab without save prompt
+        doc.isModified = false
         _ = documentManager.closeDocument(at: index)
     }
 }

@@ -99,42 +99,59 @@ class TabBarView: NSView {
 
     private var dragStartPoint: NSPoint?
     private var dragTabIndex: Int?
+    private var isDragging = false
+
+    private func tabIndexAt(point: NSPoint) -> Int? {
+        for sub in subviews {
+            if let btn = sub as? NSButton, btn.action == #selector(tabClicked(_:)),
+               btn.frame.contains(point) {
+                return btn.tag
+            }
+        }
+        return nil
+    }
 
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
-        dragStartPoint = point
-        dragTabIndex = nil
+        isDragging = false
 
-        // Find which tab was clicked
-        for sub in subviews {
-            if let btn = sub as? NSButton, btn.frame.contains(point) {
-                dragTabIndex = btn.tag
-                break
-            }
+        if let idx = tabIndexAt(point: point) {
+            dragStartPoint = event.locationInWindow
+            dragTabIndex = idx
+            // Select the tab immediately
+            delegate?.tabBarView(self, didSelectTabAt: idx)
+        } else {
+            dragStartPoint = nil
+            dragTabIndex = nil
+            super.mouseDown(with: event)
         }
-        super.mouseDown(with: event)
     }
 
     override func mouseDragged(with event: NSEvent) {
-        guard let startPoint = dragStartPoint, let tabIdx = dragTabIndex else {
+        guard let startPoint = dragStartPoint, let _ = dragTabIndex else {
             super.mouseDragged(with: event)
             return
         }
 
-        let currentPoint = convert(event.locationInWindow, from: nil)
-        let distance = abs(currentPoint.y - startPoint.y)
-
-        // If dragged far enough vertically (outside the tab bar)
-        if distance > 40 {
-            dragStartPoint = nil
-            dragTabIndex = nil
-            delegate?.tabBarView(self, didDragOutTabAt: tabIdx)
+        let distance = abs(event.locationInWindow.y - startPoint.y)
+        if distance > 30 && !isDragging {
+            isDragging = true
+            NSCursor.openHand.set()
         }
     }
 
     override func mouseUp(with event: NSEvent) {
+        if isDragging, let tabIdx = dragTabIndex {
+            NSCursor.arrow.set()
+            // Check if mouse is outside the tab bar
+            let point = convert(event.locationInWindow, from: nil)
+            if !bounds.contains(point) {
+                delegate?.tabBarView(self, didDragOutTabAt: tabIdx)
+            }
+        }
         dragStartPoint = nil
         dragTabIndex = nil
+        isDragging = false
         super.mouseUp(with: event)
     }
 
