@@ -50,13 +50,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             if let doc = mainController.documentManager.openDocument(at: URL(fileURLWithPath: f)) {
                 if let title = customTitle {
                     doc.title = title
-                    // If it was an unsaved doc (temp file), clear the fileURL so it acts as unsaved
-                    if f.contains(FileManager.default.temporaryDirectory.path) {
+                    if f.hasPrefix(FileManager.default.temporaryDirectory.path) {
                         doc.fileURL = nil
+                        doc.isModified = true
                     }
+                    // Update tab display
                     if let idx = mainController.documentManager.documents.firstIndex(where: { $0.id == doc.id }) {
                         mainController.documentManager.delegate?.documentManager(
                             mainController.documentManager, didUpdateDocument: doc, at: idx)
+                        mainController.documentManager.switchToDocument(at: idx)
                     }
                 }
             }
@@ -78,6 +80,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool { true }
 
     func application(_ sender: NSApplication, openFile filename: String) -> Bool {
+        // Skip args from --title flag
+        if isPartOfTitleArg(filename) { return true }
         if mainController != nil {
             mainController.documentManager.openDocument(at: URL(fileURLWithPath: filename))
         } else {
@@ -88,12 +92,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func application(_ sender: NSApplication, openFiles filenames: [String]) {
         for f in filenames {
+            if isPartOfTitleArg(f) { continue }
             if mainController != nil {
                 mainController.documentManager.openDocument(at: URL(fileURLWithPath: f))
             } else {
                 pendingFiles.append(f)
             }
         }
+    }
+
+    private func isPartOfTitleArg(_ filename: String) -> Bool {
+        let args = CommandLine.arguments
+        if let idx = args.firstIndex(of: "--title"), idx + 1 < args.count {
+            return args[idx + 1] == filename
+        }
+        return false
     }
 
     func applicationWillTerminate(_ notification: Notification) {
