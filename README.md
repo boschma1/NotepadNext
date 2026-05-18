@@ -143,11 +143,18 @@ NotepadNext/
 
 ## Roadmap
 
-- Universal (arm64 + x86_64) builds
-- Developer ID signing and notarization
-- Homebrew cask
-- Plugin API documentation
-- More built-in language definitions
+The next planned release is tracked under the
+[**v1.1.0** milestone](https://github.com/boschma1/NotepadNext/milestone/1).
+Highlights:
+
+- [Universal (arm64 + x86_64) builds](https://github.com/boschma1/NotepadNext/issues/1)
+- [Developer ID signing and notarization](https://github.com/boschma1/NotepadNext/issues/2)
+- [Homebrew cask](https://github.com/boschma1/NotepadNext/issues/3)
+- [Plugin API documentation](https://github.com/boschma1/NotepadNext/issues/4)
+- [More built-in language definitions](https://github.com/boschma1/NotepadNext/issues/5)
+- [Automated test suite](https://github.com/boschma1/NotepadNext/issues/6)
+
+See [ROADMAP.md](./ROADMAP.md) for the full plan.
 
 ## Contributing
 
