@@ -1,7 +1,7 @@
-# NotepadNext
+# NotepadMacMac
 
 A fast, native macOS text editor in the spirit of Notepad++ — built from the
-ground up in Swift on top of AppKit. NotepadNext aims to be the
+ground up in Swift on top of AppKit. NotepadMacMac aims to be the
 quick-to-launch, no-friction scratchpad and code editor that macOS has been
 missing: open a file, edit it, save it, get out.
 
@@ -13,14 +13,14 @@ missing: open a file, edit it, save it, get out.
 
 ---
 
-## Why NotepadNext?
+## Why NotepadMacMac?
 
 macOS ships with TextEdit, which is fine for the occasional note but isn't
 designed for programmers or power users. The other end of the spectrum —
 VS Code, Sublime, the JetBrains suite — is overkill when you just want to
 peek at a log, tweak a config file, or jot something down.
 
-NotepadNext sits in the middle:
+NotepadMacMac sits in the middle:
 
 - **Launches instantly.** It's a small, native AppKit app — not Electron.
 - **Real tabs, real sessions.** Reopen the app and your tabs come back
@@ -98,42 +98,42 @@ plist, GraphQL, etc.).
 
 ### Download the release
 
-1. Grab `NotepadNext-v1.0.0-macOS-arm64.zip` from
-   [Releases](https://github.com/boschma1/NotepadNext/releases/latest).
-2. Unzip and drag **NotepadNext.app** into `/Applications`.
+1. Grab `NotepadMacMac-v1.0.0-macOS-arm64.zip` from
+   [Releases](https://github.com/boschma1/NotepadMacMac/releases/latest).
+2. Unzip and drag **NotepadMacMac.app** into `/Applications`.
 3. Because the build is **ad-hoc signed (not notarized)**, the first launch
    will be blocked by Gatekeeper. Either right-click → **Open** the first
    time, or remove the quarantine attribute:
 
    ```sh
-   xattr -dr com.apple.quarantine /Applications/NotepadNext.app
+   xattr -dr com.apple.quarantine /Applications/NotepadMacMac.app
    ```
 
 ### Build from source
 
 ```sh
-git clone https://github.com/boschma1/NotepadNext.git
-cd NotepadNext
+git clone https://github.com/boschma1/NotepadMacMac.git
+cd NotepadMacMac
 swift build -c release --arch arm64
-# the binary lands at .build/arm64-apple-macosx/release/NotepadNext
+# the binary lands at .build/arm64-apple-macosx/release/NotepadMacMac
 ```
 
 To run inside the bundled `.app`:
 
 ```sh
-cp .build/arm64-apple-macosx/release/NotepadNext \
-   NotepadNext.app/Contents/MacOS/NotepadNext
-open NotepadNext.app
+cp .build/arm64-apple-macosx/release/NotepadMacMac \
+   NotepadMacMac.app/Contents/MacOS/NotepadMacMac
+open NotepadMacMac.app
 ```
 
 ## Project layout
 
 ```
-NotepadNext/
+NotepadMacMac/
 ├── Package.swift                  # Swift Package manifest (executable target)
-├── NotepadNext.app/               # Curated .app bundle (Info.plist, icon, signature)
+├── NotepadMacMac.app/               # Curated .app bundle (Info.plist, icon, signature)
 ├── Resources/                     # App icon and bundled resources
-└── Sources/NotepadNext/
+└── Sources/NotepadMacMac/
     ├── App/                       # AppDelegate, MenuManager, entry point
     ├── Config/                    # Preferences, themes, sessions, recent files, plugins
     ├── Document/                  # Document model & manager
@@ -144,15 +144,15 @@ NotepadNext/
 ## Roadmap
 
 The next planned release is tracked under the
-[**v1.1.0** milestone](https://github.com/boschma1/NotepadNext/milestone/1).
+[**v1.1.0** milestone](https://github.com/boschma1/NotepadMacMac/milestone/1).
 Highlights:
 
-- [Universal (arm64 + x86_64) builds](https://github.com/boschma1/NotepadNext/issues/1)
-- [Developer ID signing and notarization](https://github.com/boschma1/NotepadNext/issues/2)
-- [Homebrew cask](https://github.com/boschma1/NotepadNext/issues/3)
-- [Plugin API documentation](https://github.com/boschma1/NotepadNext/issues/4)
-- [More built-in language definitions](https://github.com/boschma1/NotepadNext/issues/5)
-- [Automated test suite](https://github.com/boschma1/NotepadNext/issues/6)
+- [Universal (arm64 + x86_64) builds](https://github.com/boschma1/NotepadMacMac/issues/1)
+- [Developer ID signing and notarization](https://github.com/boschma1/NotepadMacMac/issues/2)
+- [Homebrew cask](https://github.com/boschma1/NotepadMacMac/issues/3)
+- [Plugin API documentation](https://github.com/boschma1/NotepadMacMac/issues/4)
+- [More built-in language definitions](https://github.com/boschma1/NotepadMacMac/issues/5)
+- [Automated test suite](https://github.com/boschma1/NotepadMacMac/issues/6)
 
 See [ROADMAP.md](./ROADMAP.md) for the full plan.
 

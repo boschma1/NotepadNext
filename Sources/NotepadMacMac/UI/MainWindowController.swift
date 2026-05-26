@@ -385,7 +385,7 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
             guard response == .OK, let url = panel.url else { return }
             do {
                 try doc.save(to: url)
-                self?.window?.title = "NotepadNext — \(doc.title)"
+                self?.window?.title = "NotepadMacMac — \(doc.title)"
                 self?.updateTabTitle(for: doc)
             } catch { NSAlert(error: error).runModal() }
         }
@@ -596,7 +596,7 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
             applyWordWrap()
         }
         updateStatusBar(for: doc)
-        window?.title = "NotepadNext — \(doc.fileURL?.path ?? doc.title)"
+        window?.title = "NotepadMacMac — \(doc.fileURL?.path ?? doc.title)"
     }
 
     private func updateStatusBar(for doc: Document) {

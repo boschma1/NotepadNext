@@ -43,7 +43,7 @@ class PluginManager {
     }
 }
 
-/// Protocol for NotepadNext plugins.
+/// Protocol for NotepadMacMac plugins.
 /// Plugins are macOS bundles with a principal class conforming to this protocol.
 @objc protocol NotepadPlugin: AnyObject {
     init()
@@ -73,7 +73,7 @@ class PluginManagerController: NSWindowController {
         guard let cv = window?.contentView else { return }
 
         let infoLabel = NSTextField(wrappingLabelWithString:
-            "Plugins are macOS .bundle files placed in:\n\(PluginManager.shared.pluginsDirectory.path)\n\nRestart NotepadNext after adding plugins.")
+            "Plugins are macOS .bundle files placed in:\n\(PluginManager.shared.pluginsDirectory.path)\n\nRestart NotepadMacMac after adding plugins.")
         infoLabel.frame = NSRect(x: 16, y: cv.bounds.height - 70, width: cv.bounds.width - 32, height: 60)
         infoLabel.font = NSFont.systemFont(ofSize: 11)
         infoLabel.textColor = .secondaryLabelColor

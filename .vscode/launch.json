@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:NotepadMacMac}",
+            "name": "Debug NotepadMacMac",
+            "target": "NotepadMacMac",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug NotepadMacMac"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:NotepadMacMac}",
+            "name": "Release NotepadMacMac",
+            "target": "NotepadMacMac",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release NotepadMacMac"
+        }
+    ]
+}

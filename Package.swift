@@ -3,14 +3,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "NotepadNext",
+    name: "NotepadMacMac",
     platforms: [
         .macOS(.v13)
     ],
     targets: [
         .executableTarget(
-            name: "NotepadNext",
-            path: "Sources/NotepadNext",
+            name: "NotepadMacMac",
+            path: "Sources/NotepadMacMac",
             resources: [
                 .copy("../../Resources")
             ],

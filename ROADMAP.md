@@ -1,16 +1,16 @@
 # Roadmap
 
-This file tracks what's planned for NotepadNext beyond
-[v1.0.0](https://github.com/boschma1/NotepadNext/releases/tag/v1.0.0).
+This file tracks what's planned for NotepadMacMac beyond
+[v1.0.0](https://github.com/boschma1/NotepadMacMac/releases/tag/v1.0.0).
 Each item is also a public issue on GitHub so you can follow progress,
 comment, or pick one up.
 
 The active milestone is
-[**v1.1.0**](https://github.com/boschma1/NotepadNext/milestone/1).
+[**v1.1.0**](https://github.com/boschma1/NotepadMacMac/milestone/1).
 
 ## Shipped in v1.0.0
 
-See the [v1.0.0 release notes](https://github.com/boschma1/NotepadNext/releases/tag/v1.0.0)
+See the [v1.0.0 release notes](https://github.com/boschma1/NotepadMacMac/releases/tag/v1.0.0)
 for the full feature list. Highlights:
 
 - Multi-tab editor with drag-to-reorder, drag-out-to-new-instance, split view
@@ -26,12 +26,12 @@ for the full feature list. Highlights:
 
 | #   | Item                                                                                          | Area          |
 | --- | --------------------------------------------------------------------------------------------- | ------------- |
-| [#1](https://github.com/boschma1/NotepadNext/issues/1) | Universal (arm64 + x86_64) build           | Distribution  |
-| [#2](https://github.com/boschma1/NotepadNext/issues/2) | Developer ID signing + notarization        | Distribution  |
-| [#3](https://github.com/boschma1/NotepadNext/issues/3) | Homebrew cask                              | Distribution  |
-| [#4](https://github.com/boschma1/NotepadNext/issues/4) | Document the plugin API                    | Plugins       |
-| [#5](https://github.com/boschma1/NotepadNext/issues/5) | More built-in language definitions         | Languages     |
-| [#6](https://github.com/boschma1/NotepadNext/issues/6) | Add an automated test suite                | Tests         |
+| [#1](https://github.com/boschma1/NotepadMacMac/issues/1) | Universal (arm64 + x86_64) build           | Distribution  |
+| [#2](https://github.com/boschma1/NotepadMacMac/issues/2) | Developer ID signing + notarization        | Distribution  |
+| [#3](https://github.com/boschma1/NotepadMacMac/issues/3) | Homebrew cask                              | Distribution  |
+| [#4](https://github.com/boschma1/NotepadMacMac/issues/4) | Document the plugin API                    | Plugins       |
+| [#5](https://github.com/boschma1/NotepadMacMac/issues/5) | More built-in language definitions         | Languages     |
+| [#6](https://github.com/boschma1/NotepadMacMac/issues/6) | Add an automated test suite                | Tests         |
 
 ### Notes
 

@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>NotepadNext</string>
+    <string>NotepadMacMac</string>
     <key>CFBundleDisplayName</key>
-    <string>NotepadNext</string>
+    <string>NotepadMacMac</string>
     <key>CFBundleIdentifier</key>
-    <string>com.notepadnext.app</string>
+    <string>com.notepadmacmac.app</string>
     <key>CFBundleVersion</key>
     <string>1.0.0</string>
     <key>CFBundleShortVersionString</key>
     <string>1.0.0</string>
     <key>CFBundleExecutable</key>
-    <string>NotepadNext</string>
+    <string>NotepadMacMac</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundlePackageType</key>

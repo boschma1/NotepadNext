@@ -28,7 +28,7 @@ class MenuManager {
         let appMenuItem = NSMenuItem()
         let appMenu = NSMenu()
 
-        appMenu.addItem(withTitle: "About NotepadNext",
+        appMenu.addItem(withTitle: "About NotepadMacMac",
                         action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)),
                         keyEquivalent: "")
         appMenu.addItem(.separator())
@@ -43,7 +43,7 @@ class MenuManager {
                         keyEquivalent: "")
         appMenu.addItem(.separator())
 
-        appMenu.addItem(withTitle: "Hide NotepadNext",
+        appMenu.addItem(withTitle: "Hide NotepadMacMac",
                         action: #selector(NSApplication.hide(_:)),
                         keyEquivalent: "h")
 
@@ -58,7 +58,7 @@ class MenuManager {
                         keyEquivalent: "")
         appMenu.addItem(.separator())
 
-        appMenu.addItem(withTitle: "Quit NotepadNext",
+        appMenu.addItem(withTitle: "Quit NotepadMacMac",
                         action: #selector(NSApplication.terminate(_:)),
                         keyEquivalent: "q")
 
@@ -523,7 +523,7 @@ class MenuManager {
         let helpMenuItem = NSMenuItem()
         let helpMenu = NSMenu(title: "Help")
 
-        helpMenu.addItem(withTitle: "NotepadNext Help",
+        helpMenu.addItem(withTitle: "NotepadMacMac Help",
                          action: nil,
                          keyEquivalent: "")
 

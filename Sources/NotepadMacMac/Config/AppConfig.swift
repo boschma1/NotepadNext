@@ -2,8 +2,8 @@ import Foundation
 
 /// Global app configuration.
 struct AppConfig {
-    static let appName = "NotepadNext"
-    static let bundleIdentifier = "com.notepadnext.app"
+    static let appName = "NotepadMacMac"
+    static let bundleIdentifier = "com.notepadmacmac.app"
     static let version = "0.1.0"
 
     static var configDirectory: URL {
