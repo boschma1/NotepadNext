@@ -101,8 +101,15 @@ plist, GraphQL, etc.).
 
 ### Download the release
 
-1. Grab `NotepadMacMac-v1.0.0-macOS-arm64.zip` from
+1. Grab the latest build from
    [Releases](https://github.com/boschma1/NotepadMacMac/releases/latest).
+   Either of these download URLs works:
+
+   - **Latest (always-fresh):**
+     `https://github.com/boschma1/NotepadMacMac/releases/latest/download/NotepadMacMac-latest.zip`
+   - **A specific version:** the `NotepadMacMac-vX.Y.Z-macOS-arm64.zip`
+     asset attached to that release.
+
 2. Unzip and drag **NotepadMacMac.app** into `/Applications`.
 3. Because the build is **ad-hoc signed (not notarized)**, the first launch
    will be blocked by Gatekeeper. Either right-click → **Open** the first
@@ -128,6 +135,37 @@ cp .build/arm64-apple-macosx/release/NotepadMacMac \
    NotepadMacMac.app/Contents/MacOS/NotepadMacMac
 open NotepadMacMac.app
 ```
+
+## Cutting a release
+
+The whole release flow — build, refresh the in-tree `.app` bundle, codesign,
+commit, tag, push, and create the GitHub release with both a versioned
+asset and the stable `NotepadMacMac-latest.zip` — is wrapped up in a single
+script:
+
+```sh
+# 1. Bump CFBundleShortVersionString in NotepadMacMac.app/Contents/Info.plist
+#    and `static let version` in Sources/NotepadMacMac/Config/AppConfig.swift
+#    to the same value (e.g. 1.2.0).
+# 2. Make any other source changes for the release. Leave everything uncommitted.
+# 3. (Optional) write release notes to a markdown file.
+# 4. Run:
+
+./scripts/release.sh \
+    --message "Add fancy new feature (v1.2.0)" \
+    --notes-file release-notes.md
+```
+
+The script verifies that both version strings agree, that the tag doesn't
+already exist locally or on the remote, builds the release binary, refreshes
+the bundle and re-signs it ad-hoc, shows a summary, and on confirmation
+commits + tags + pushes + creates the GitHub release with both:
+
+- `NotepadMacMac-vX.Y.Z-macOS-arm64.zip` (versioned, archival)
+- `NotepadMacMac-latest.zip` (stable, served from the always-latest URL)
+
+Use `--dry-run` to validate everything and rebuild the bundle without
+publishing, and `--yes` to skip the interactive confirmation.
 
 ## Project layout
 
