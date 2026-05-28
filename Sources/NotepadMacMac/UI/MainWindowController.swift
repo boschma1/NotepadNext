@@ -120,6 +120,13 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         NotificationCenter.default.addObserver(forName: NSWindow.didResizeNotification, object: window, queue: .main) { [weak self] _ in
             self?.windowDidResize()
         }
+
+        // Re-check pending external file changes when the window comes
+        // back to the foreground (e.g. user finished editing in TextEdit
+        // and switched back to NotepadMacMac).
+        NotificationCenter.default.addObserver(forName: NSWindow.didBecomeKeyNotification, object: window, queue: .main) { [weak self] _ in
+            self?.processPendingExternalChanges()
+        }
     }
 
     // MARK: - NSTextViewDelegate
@@ -372,7 +379,7 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         guard let doc = documentManager.activeDocument else { return }
         doc.content = textView.string
         guard let _ = doc.fileURL else { saveCurrentDocumentAs(); return }
-        do { try doc.save(); updateTabTitle(for: doc) }
+        do { try documentManager.saveDocument(doc); updateTabTitle(for: doc) }
         catch { saveCurrentDocumentAs() }
     }
 
@@ -384,10 +391,142 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         panel.beginSheetModal(for: window) { [weak self] response in
             guard response == .OK, let url = panel.url else { return }
             do {
-                try doc.save(to: url)
+                try self?.documentManager.saveDocument(doc, to: url)
                 self?.window?.title = "NotepadMacMac — \(doc.title)"
                 self?.updateTabTitle(for: doc)
             } catch { NSAlert(error: error).runModal() }
+        }
+    }
+
+    // MARK: - External file change handling
+
+    /// IDs of documents that have a pending external-change event we
+    /// haven't yet shown the user. We re-derive `wasDeleted` from a
+    /// fresh stat at drain time so multiple watcher events for the
+    /// same underlying save coalesce into at most one prompt.
+    private var externalChangeQueue: Set<UUID> = []
+    private var isPromptingExternalChange = false
+
+    /// Show the queued external-change prompt for the currently-active
+    /// document, if any. Other docs' prompts wait until the user
+    /// switches to them.
+    fileprivate func processPendingExternalChanges() {
+        guard !isPromptingExternalChange,
+              let window = window, window.isKeyWindow,
+              let doc = documentManager.activeDocument,
+              externalChangeQueue.remove(doc.id) != nil,
+              let url = doc.fileURL
+        else { return }
+
+        // Fresh-check the disk state. The queue may have been
+        // populated by multiple watcher events for the same external
+        // save (atomic rename + post-rename mtime/xattr touches), or
+        // the user may have already reloaded in response to an
+        // earlier dialog. In either case, if the doc's authoritative
+        // state already matches the disk, drop the prompt.
+        let currentSig = Document.diskSignature(of: url)
+        if currentSig == nil {
+            guard doc.lastKnownDiskSignature != nil else { return }
+            promptExternalChange(for: doc, wasDeleted: true)
+        } else {
+            guard currentSig != doc.lastKnownDiskSignature else { return }
+            promptExternalChange(for: doc, wasDeleted: false)
+        }
+    }
+
+    private func promptExternalChange(for doc: Document, wasDeleted: Bool) {
+        guard let window = window else { return }
+        // Make sure the doc's in-memory content reflects the editor in
+        // case the user just typed something — important for the
+        // "unsaved changes" framing.
+        if doc.id == documentManager.activeDocument?.id {
+            doc.content = textView.string
+        }
+
+        let alert = NSAlert()
+        let name = doc.fileURL?.lastPathComponent ?? doc.title
+
+        if wasDeleted {
+            alert.messageText = "\"\(name)\" has been deleted on disk."
+            alert.informativeText = "The file was removed or moved by another application. The content remains here as an unsaved buffer — save it to restore the file."
+            alert.addButton(withTitle: "OK")
+            alert.alertStyle = .warning
+            doc.isModified = true
+            if let idx = documentManager.documents.firstIndex(where: { $0.id == doc.id }) {
+                documentManager.delegate?.documentManager(documentManager, didUpdateDocument: doc, at: idx)
+            }
+            isPromptingExternalChange = true
+            alert.beginSheetModal(for: window) { [weak self, weak doc] _ in
+                guard let self else { return }
+                self.isPromptingExternalChange = false
+                // Acknowledge the deletion so a subsequent watcher
+                // event with the same nil signature doesn't re-prompt.
+                doc?.lastKnownDiskSignature = nil
+                self.processPendingExternalChanges()
+            }
+            return
+        }
+
+        alert.messageText = "\"\(name)\" has changed on disk."
+        if doc.isModified {
+            alert.informativeText = "Another application modified this file, but you have unsaved changes in NotepadMacMac. Reloading will discard your unsaved changes."
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "Keep My Version")   // default
+            alert.addButton(withTitle: "Reload From Disk")
+        } else {
+            alert.informativeText = "Another application modified this file. Reload it from disk to see the latest content?"
+            alert.alertStyle = .informational
+            alert.addButton(withTitle: "Reload From Disk")  // default
+            alert.addButton(withTitle: "Keep My Version")
+        }
+
+        let reloadIsDefault = !doc.isModified
+        isPromptingExternalChange = true
+        alert.beginSheetModal(for: window) { [weak self, weak doc] response in
+            guard let self else { return }
+            self.isPromptingExternalChange = false
+            defer { self.processPendingExternalChanges() }
+            guard let doc else { return }
+
+            let userChoseReload = (response == .alertFirstButtonReturn) == reloadIsDefault
+            if userChoseReload {
+                self.reloadDocumentFromDisk(doc)
+            } else {
+                // "Keep my version" — record the current on-disk
+                // signature as the authoritative one so we don't
+                // immediately re-prompt about the same external
+                // state. A *subsequent* external change will still
+                // differ and re-prompt.
+                if let url = doc.fileURL {
+                    doc.lastKnownDiskSignature = Document.diskSignature(of: url)
+                }
+            }
+        }
+    }
+
+    private func reloadDocumentFromDisk(_ doc: Document) {
+        do {
+            try doc.load()
+        } catch {
+            NSAlert(error: error).runModal()
+            return
+        }
+
+        // If the reloaded doc is the active one, refresh the editor
+        // while preserving the caret position (clamped to the new
+        // content length).
+        if doc.id == documentManager.activeDocument?.id {
+            let oldRange = textView.selectedRange()
+            let oldScrollOrigin = editorScrollView?.contentView.bounds.origin
+            loadDocumentIntoEditor(doc)
+            let clampedLocation = min(oldRange.location, (doc.content as NSString).length)
+            textView.setSelectedRange(NSRange(location: clampedLocation, length: 0))
+            if let origin = oldScrollOrigin {
+                textView.scroll(origin)
+            }
+        }
+        if let idx = documentManager.documents.firstIndex(where: { $0.id == doc.id }) {
+            documentManager.delegate?.documentManager(documentManager, didUpdateDocument: doc, at: idx)
         }
     }
 
@@ -667,12 +806,26 @@ extension MainWindowController: DocumentManagerDelegate {
     func documentManager(_ m: DocumentManager, didAddDocument doc: Document, at i: Int) {
         tabBarView.addTab(TabBarView.Tab(id: doc.id, title: doc.displayTitle, isModified: doc.isModified))
     }
-    func documentManager(_ m: DocumentManager, didRemoveDocumentAt i: Int) { tabBarView.removeTab(at: i) }
+    func documentManager(_ m: DocumentManager, didRemoveDocumentAt i: Int) {
+        tabBarView.removeTab(at: i)
+    }
     func documentManager(_ m: DocumentManager, didSwitchToDocument doc: Document, at i: Int) {
         tabBarView.selectTab(at: i); loadDocumentIntoEditor(doc)
+        // Drain any queued external-change prompt for the doc we just
+        // switched to, so the user sees it the moment they look at it.
+        DispatchQueue.main.async { [weak self] in
+            self?.processPendingExternalChanges()
+        }
     }
     func documentManager(_ m: DocumentManager, didUpdateDocument doc: Document, at i: Int) {
         tabBarView.updateTab(at: i, title: doc.displayTitle, isModified: doc.isModified)
+    }
+    func documentManager(_ m: DocumentManager, didDetectExternalChangeFor doc: Document, wasDeleted: Bool) {
+        // We re-derive `wasDeleted` from a fresh stat at drain time,
+        // so the Bool here is unused — multiple watcher events for
+        // the same doc collapse into one Set entry.
+        externalChangeQueue.insert(doc.id)
+        processPendingExternalChanges()
     }
 }
 

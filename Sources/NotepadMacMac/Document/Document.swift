@@ -16,6 +16,31 @@ class Document {
     var tabSize: Int = 4
     var isPinned: Bool = false
 
+    /// Snapshot of the file's on-disk identity at the moment we last
+    /// read or wrote it. Used to tell external modifications apart
+    /// from our own writes.
+    var lastKnownDiskSignature: DiskSignature?
+
+    struct DiskSignature: Equatable {
+        let inode: UInt64
+        let size: Int64
+        let mtimeSec: Int64
+        let mtimeNsec: Int64
+    }
+
+    /// Stats `url` and returns the current disk signature, or `nil`
+    /// if the file does not exist or cannot be read.
+    static func diskSignature(of url: URL) -> DiskSignature? {
+        var st = stat()
+        guard stat(url.path, &st) == 0 else { return nil }
+        return DiskSignature(
+            inode: UInt64(st.st_ino),
+            size: Int64(st.st_size),
+            mtimeSec: Int64(st.st_mtimespec.tv_sec),
+            mtimeNsec: Int64(st.st_mtimespec.tv_nsec)
+        )
+    }
+
     enum LineEnding: String {
         case unix = "LF"
         case windows = "CRLF"
@@ -67,6 +92,7 @@ class Document {
         }
 
         isModified = false
+        lastKnownDiskSignature = Document.diskSignature(of: url)
     }
 
     /// Save content to file URL
@@ -84,6 +110,7 @@ class Document {
         fileURL = targetURL
         title = targetURL.lastPathComponent
         isModified = false
+        lastKnownDiskSignature = Document.diskSignature(of: targetURL)
     }
 
     var displayTitle: String {

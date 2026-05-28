@@ -67,6 +67,9 @@ If you've ever wished Notepad++ ran natively on macOS, this is for you.
 - Single-instance behavior: opening a file from Finder reuses the running
   app (with optional offset for new windows)
 - Modified-dot indicator on tabs
+- **External-change detection**: if an open file is modified or deleted
+  by another app (e.g. TextEdit), NotepadMacMac prompts you to reload it
+  from disk or keep your in-editor version
 
 ### Languages & syntax highlighting
 First-class syntax highlighting for:
