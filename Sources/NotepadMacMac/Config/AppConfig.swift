@@ -4,7 +4,7 @@ import Foundation
 struct AppConfig {
     static let appName = "NotepadMacMac"
     static let bundleIdentifier = "com.notepadmacmac.app"
-    static let version = "1.1.0"
+    static let version = "1.1.1"
 
     static var configDirectory: URL {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!

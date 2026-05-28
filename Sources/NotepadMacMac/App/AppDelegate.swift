@@ -70,6 +70,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         pendingFiles.removeAll()
+
+        // Safety net: regardless of session state, command-line args, or
+        // restore failures, the user must always end up with at least
+        // one tab. Otherwise the window is unusably empty and actions
+        // like Cmd+S silently no-op because there's no active document.
+        if mainController.documentManager.documents.isEmpty {
+            mainController.documentManager.createNewDocument()
+        }
     }
 
     private var pendingFiles: [String] = []

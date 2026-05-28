@@ -48,6 +48,15 @@ class SessionManager {
         var entries: [SessionData.FileEntry] = []
 
         for doc in documentManager.documents {
+            // Skip empty, unsaved scratch tabs — they'd round-trip as
+            // `{path: nil, unsavedID: nil}` placeholder entries that
+            // `restoreSession` can't restore but `hasSession()` still
+            // counts as present, which leaves the next launch with
+            // zero tabs.
+            if doc.fileURL == nil && doc.content.isEmpty {
+                continue
+            }
+
             var unsavedID: String? = nil
 
             if !doc.content.isEmpty {
