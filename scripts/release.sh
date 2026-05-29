@@ -10,14 +10,17 @@
 # The script will:
 #   - Verify Info.plist and AppConfig.swift versions match.
 #   - Verify the v<version> tag does not already exist.
-#   - swift build -c release --arch arm64.
+#   - swift build -c release --arch arm64 --arch x86_64
+#     (SwiftPM produces a universal Mach-O at
+#     .build/apple/Products/Release/NotepadMacMac).
+#   - Verify the resulting binary contains both arm64 and x86_64 slices.
 #   - Copy the binary into NotepadMacMac.app and re-codesign ad-hoc.
 #   - Stage everything, show a confirmation, then commit + tag + push.
 #   - Create a GitHub release with two assets:
-#       NotepadMacMac-v<version>-macOS-arm64.zip   (versioned, archival)
-#       NotepadMacMac-latest.zip                   (stable filename for
-#                                                   the /releases/latest/
-#                                                   download/ URL)
+#       NotepadMacMac-v<version>-macOS-universal.zip  (versioned, archival)
+#       NotepadMacMac-latest.zip                      (stable filename for
+#                                                      the /releases/latest/
+#                                                      download/ URL)
 #
 # Stable download URL that always points at the newest release:
 #   https://github.com/boschma1/NotepadMacMac/releases/latest/download/NotepadMacMac-latest.zip
@@ -67,9 +70,10 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT"
 
 # --- Sanity checks -----------------------------------------------------------
-command -v gh >/dev/null  || { echo "ERROR: gh CLI not installed."  >&2; exit 1; }
+command -v gh >/dev/null    || { echo "ERROR: gh CLI not installed."  >&2; exit 1; }
 command -v swift >/dev/null || { echo "ERROR: swift not installed." >&2; exit 1; }
 command -v ditto >/dev/null || { echo "ERROR: ditto not installed." >&2; exit 1; }
+command -v lipo >/dev/null  || { echo "ERROR: lipo not installed."   >&2; exit 1; }
 
 INFO_PLIST="NotepadMacMac.app/Contents/Info.plist"
 APP_CONFIG="Sources/NotepadMacMac/Config/AppConfig.swift"
@@ -112,13 +116,31 @@ if [[ -n "$NOTES_FILE" && ! -f "$NOTES_FILE" ]]; then
 fi
 
 # --- Build -------------------------------------------------------------------
-echo "→ Building NotepadMacMac $TAG (release, arm64)…"
-swift build -c release --arch arm64
+echo "→ Building NotepadMacMac $TAG (release, universal: arm64 + x86_64)…"
+swift build -c release --arch arm64 --arch x86_64
+
+BUILT_BIN=".build/apple/Products/Release/NotepadMacMac"
+[[ -f "$BUILT_BIN" ]] || {
+    echo "ERROR: expected universal binary at $BUILT_BIN was not produced." >&2
+    exit 1
+}
+
+ARCHS="$(lipo -archs "$BUILT_BIN")"
+if ! [[ "$ARCHS" == *"arm64"* && "$ARCHS" == *"x86_64"* ]]; then
+    echo "ERROR: $BUILT_BIN is not universal (got: $ARCHS)." >&2
+    exit 1
+fi
+echo "  ✓ universal binary: $ARCHS"
 
 echo "→ Refreshing app bundle and re-signing ad-hoc…"
-cp -f .build/arm64-apple-macosx/release/NotepadMacMac \
-      NotepadMacMac.app/Contents/MacOS/NotepadMacMac
+cp -f "$BUILT_BIN" NotepadMacMac.app/Contents/MacOS/NotepadMacMac
 codesign --force --deep --sign - NotepadMacMac.app >/dev/null
+
+BUNDLE_ARCHS="$(lipo -archs NotepadMacMac.app/Contents/MacOS/NotepadMacMac)"
+if ! [[ "$BUNDLE_ARCHS" == *"arm64"* && "$BUNDLE_ARCHS" == *"x86_64"* ]]; then
+    echo "ERROR: bundled binary lost a slice after codesign (got: $BUNDLE_ARCHS)." >&2
+    exit 1
+fi
 
 # --- Stage + confirm ---------------------------------------------------------
 git add -A
@@ -163,7 +185,7 @@ git push origin "$TAG"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-VERSIONED_ZIP="$TMP/NotepadMacMac-$TAG-macOS-arm64.zip"
+VERSIONED_ZIP="$TMP/NotepadMacMac-$TAG-macOS-universal.zip"
 LATEST_ZIP="$TMP/NotepadMacMac-latest.zip"
 
 echo "→ Packaging zips…"

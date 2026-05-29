@@ -24,25 +24,40 @@ class SplitViewManager {
     func activate(in contentView: NSView, editorFrame: NSRect) {
         guard !isActive else { return }
 
-        secondScrollView = NSScrollView(frame: .zero)
+        // Start with a real (non-zero) frame so the clip view has usable
+        // bounds — otherwise the document text view is born at .zero and
+        // never recovers a usable height when the scroll view is resized
+        // later, making the second pane invisible / unscrollable.
+        secondScrollView = NSScrollView(frame: editorFrame)
         secondScrollView!.autoresizingMask = [.width, .height]
         secondScrollView!.hasVerticalScroller = true
         secondScrollView!.hasHorizontalScroller = true
 
-        secondTextView = NSTextView(frame: secondScrollView!.contentView.bounds)
+        secondTextView = PlainTextView(frame: secondScrollView!.contentView.bounds)
         secondTextView!.autoresizingMask = [.width]
         secondTextView!.isEditable = true
         secondTextView!.isSelectable = true
         secondTextView!.allowsUndo = true
-        secondTextView!.font = NSFont.monospacedSystemFont(ofSize: 13, weight: .regular)
-        secondTextView!.textColor = .textColor
-        secondTextView!.backgroundColor = .textBackgroundColor
+        secondTextView!.isAutomaticQuoteSubstitutionEnabled = false
+        secondTextView!.isAutomaticDashSubstitutionEnabled = false
+        secondTextView!.isAutomaticTextReplacementEnabled = false
+        secondTextView!.isAutomaticSpellingCorrectionEnabled = false
+        secondTextView!.smartInsertDeleteEnabled = false
+        let theme = ThemeManager.shared.currentTheme
+        secondTextView!.font = theme.editorFont
+        secondTextView!.textColor = theme.foreground
+        secondTextView!.backgroundColor = theme.background
+        secondTextView!.insertionPointColor = theme.caretColor
         secondTextView!.isHorizontallyResizable = true
+        secondTextView!.isVerticallyResizable = true
+        secondTextView!.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude,
+                                          height: CGFloat.greatestFiniteMagnitude)
         secondTextView!.textContainer?.widthTracksTextView = false
         secondTextView!.textContainer?.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude,
                                                                height: CGFloat.greatestFiniteMagnitude)
 
         secondScrollView!.documentView = secondTextView
+        secondTextView!.delegate = mainController
         contentView.addSubview(secondScrollView!)
 
         // Clone current content

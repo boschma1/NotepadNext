@@ -5,11 +5,11 @@ ground up in Swift on top of AppKit. NotepadMacMac aims to be the
 quick-to-launch, no-friction scratchpad and code editor that macOS has been
 missing: open a file, edit it, save it, get out.
 
-> **Status:** v1.0.0 — first public release. Apple Silicon only for now.
+> **Status:** v1.2.0 — universal build (Apple Silicon + Intel).
 
 ![macOS 13+](https://img.shields.io/badge/macOS-13.0%2B-blue)
 ![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange)
-![Architecture arm64](https://img.shields.io/badge/arch-arm64-lightgrey)
+![Architecture universal](https://img.shields.io/badge/arch-universal%20(arm64%20%2B%20x86__64)-lightgrey)
 
 ---
 
@@ -90,12 +90,10 @@ plist, GraphQL, etc.).
 ## Requirements
 
 - macOS **13.0 (Ventura)** or later
-- Apple Silicon (**arm64**)
+- Apple Silicon (**arm64**) or Intel (**x86_64**) — the release binary is
+  a universal Mach-O containing both slices
 - For building from source: **Swift 6.0 toolchain** (Xcode 16 or
   swift.org toolchain)
-
-> An Intel (x86_64) and a universal build are planned; for now the release
-> binary is arm64-only.
 
 ## Installation
 
@@ -107,7 +105,7 @@ plist, GraphQL, etc.).
 
    - **Latest (always-fresh):**
      `https://github.com/boschma1/NotepadMacMac/releases/latest/download/NotepadMacMac-latest.zip`
-   - **A specific version:** the `NotepadMacMac-vX.Y.Z-macOS-arm64.zip`
+   - **A specific version:** the `NotepadMacMac-vX.Y.Z-macOS-universal.zip`
      asset attached to that release.
 
 2. Unzip and drag **NotepadMacMac.app** into `/Applications`.
@@ -124,14 +122,14 @@ plist, GraphQL, etc.).
 ```sh
 git clone https://github.com/boschma1/NotepadMacMac.git
 cd NotepadMacMac
-swift build -c release --arch arm64
-# the binary lands at .build/arm64-apple-macosx/release/NotepadMacMac
+swift build -c release --arch arm64 --arch x86_64
+# the universal binary lands at .build/apple/Products/Release/NotepadMacMac
 ```
 
 To run inside the bundled `.app`:
 
 ```sh
-cp .build/arm64-apple-macosx/release/NotepadMacMac \
+cp .build/apple/Products/Release/NotepadMacMac \
    NotepadMacMac.app/Contents/MacOS/NotepadMacMac
 open NotepadMacMac.app
 ```
@@ -161,7 +159,7 @@ already exist locally or on the remote, builds the release binary, refreshes
 the bundle and re-signs it ad-hoc, shows a summary, and on confirmation
 commits + tags + pushes + creates the GitHub release with both:
 
-- `NotepadMacMac-vX.Y.Z-macOS-arm64.zip` (versioned, archival)
+- `NotepadMacMac-vX.Y.Z-macOS-universal.zip` (versioned, archival)
 - `NotepadMacMac-latest.zip` (stable, served from the always-latest URL)
 
 Use `--dry-run` to validate everything and rebuild the bundle without

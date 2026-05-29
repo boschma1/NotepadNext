@@ -19,6 +19,15 @@ class TabBarView: NSView {
     private(set) var tabs: [Tab] = []
     private(set) var selectedIndex: Int = -1
 
+    /// Opacity of the tab-bar background fill. 1.0 = fully opaque
+    /// `windowBackgroundColor`, 0.0 = completely transparent.
+    var backgroundAlpha: CGFloat = 1.0 {
+        didSet {
+            layer?.backgroundColor = NSColor.windowBackgroundColor
+                .withAlphaComponent(backgroundAlpha).cgColor
+        }
+    }
+
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true

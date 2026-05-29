@@ -6,6 +6,12 @@ class LineNumberGutter: NSView {
     private weak var scrollView: NSScrollView?
     static let gutterWidth: CGFloat = 44
 
+    /// Opacity of the gutter background fill. 1.0 = fully opaque
+    /// `controlBackgroundColor`, 0.0 = no fill (skipped entirely).
+    var backgroundAlpha: CGFloat = 1.0 {
+        didSet { needsDisplay = true }
+    }
+
     override var isFlipped: Bool { true }
 
     init(textView: NSTextView, scrollView: NSScrollView) {
@@ -31,8 +37,12 @@ class LineNumberGutter: NSView {
         guard let tv = textView, let sv = scrollView,
               let lm = tv.layoutManager, let tc = tv.textContainer else { return }
 
-        NSColor.controlBackgroundColor.setFill()
-        bounds.fill()
+        if backgroundAlpha > 0 {
+            NSColor.controlBackgroundColor
+                .withAlphaComponent(backgroundAlpha)
+                .setFill()
+            bounds.fill()
+        }
         NSColor.separatorColor.setStroke()
         NSBezierPath.strokeLine(from: NSPoint(x: bounds.width - 0.5, y: 0),
                                 to: NSPoint(x: bounds.width - 0.5, y: bounds.height))

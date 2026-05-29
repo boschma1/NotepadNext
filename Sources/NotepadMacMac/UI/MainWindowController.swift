@@ -110,6 +110,15 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
             documentManager.createNewDocument()
         }
 
+        // Apply the saved window appearance (standard / transparency).
+        applyAppearanceStyle(EditorSettings.appearanceStyle)
+
+        // Re-apply appearance when the user changes transparency level in
+        // Preferences.
+        NotificationCenter.default.addObserver(forName: .nmmAppearanceDidChange, object: nil, queue: .main) { [weak self] _ in
+            self?.reapplyCurrentAppearanceStyle()
+        }
+
         // Handle tab context menu "Copy Path"
         NotificationCenter.default.addObserver(forName: .init("CopyTabPath"), object: nil, queue: .main) { [weak self] n in
             guard let idx = n.object as? Int,
@@ -139,6 +148,64 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         documentManager.updateContent(for: doc, content: textView.string)
         updateStatusBar(for: doc)
         scheduleHighlighting()
+    }
+
+    /// Intercept Enter to expand `=rand(p)` / `=rand(p, s)` into Lorem Ipsum
+    /// filler text, Microsoft-Word style.
+    func textView(_ tv: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        if commandSelector == #selector(NSResponder.insertNewline(_:))
+            && expandRandIfPresent(in: tv) {
+            return true
+        }
+        return false
+    }
+
+    /// If the line at the caret is `=rand(p)` / `=rand(p, s)`, replace it
+    /// with the corresponding Lorem Ipsum text and return true.
+    @discardableResult
+    private func expandRandIfPresent(in tv: NSTextView) -> Bool {
+        let nsText = tv.string as NSString
+        let caret = tv.selectedRange().location
+        guard caret <= nsText.length else { return false }
+
+        // Range of the current line, stripped of any trailing newline.
+        let fullLineRange = nsText.lineRange(for: NSRange(location: caret, length: 0))
+        var lineEnd = NSMaxRange(fullLineRange)
+        if lineEnd > fullLineRange.location,
+           nsText.character(at: lineEnd - 1) == 0x0A {
+            lineEnd -= 1
+        }
+        let lineRange = NSRange(location: fullLineRange.location,
+                                length: lineEnd - fullLineRange.location)
+        let line = nsText.substring(with: lineRange)
+
+        let pattern = #"^\s*=rand\((\d+)(?:\s*,\s*(\d+))?\)\s*$"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else {
+            return false
+        }
+        let lineNS = line as NSString
+        guard let match = regex.firstMatch(in: line,
+                                            range: NSRange(location: 0, length: lineNS.length)) else {
+            return false
+        }
+
+        let paragraphs = Int(lineNS.substring(with: match.range(at: 1))) ?? 0
+        let sentencesRange = match.range(at: 2)
+        let sentences = sentencesRange.location == NSNotFound
+            ? 3
+            : (Int(lineNS.substring(with: sentencesRange)) ?? 3)
+        guard paragraphs > 0, sentences > 0 else { return false }
+
+        let replacement = LoremIpsum.generate(paragraphs: paragraphs, sentences: sentences)
+        guard tv.shouldChangeText(in: lineRange, replacementString: replacement) else {
+            return false
+        }
+        tv.textStorage?.replaceCharacters(in: lineRange, with: replacement)
+        tv.didChangeText()
+        // Place caret at the end of the inserted text.
+        let newCaret = lineRange.location + (replacement as NSString).length
+        tv.setSelectedRange(NSRange(location: newCaret, length: 0))
+        return true
     }
 
     // MARK: - Syntax Highlighting (performance-optimized)
@@ -303,6 +370,10 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
            let (mainF, secondF) = svm.splitFrames(for: editorFrame) {
             editorScrollView.frame = mainF
             svm.secondScrollView?.frame = secondF
+            // Inherit the current word-wrap setting in the new pane.
+            if let secondTV = svm.secondTextView {
+                applyWordWrap(to: secondTV, wrap: wordWrapEnabled)
+            }
         } else {
             relayoutPanels()
         }
@@ -361,6 +432,15 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
             rightInset += docListWidth
         }
         editorScrollView.frame = NSRect(x: leftX, y: ey, width: b.width - leftX - rightInset, height: eh)
+
+        // If split view is active, divide the editor area between the two
+        // panes so they grow equally when the window or side-panel layout
+        // changes.
+        if let svm = splitViewManager, svm.isActive,
+           let (mainF, secondF) = svm.splitFrames(for: editorScrollView.frame) {
+            editorScrollView.frame = mainF
+            svm.secondScrollView?.frame = secondF
+        }
     }
 
     // MARK: - Theme
@@ -374,6 +454,9 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         currentFontSize = theme.editorFont.pointSize
         lineNumberGutter?.needsDisplay = true
         applySyntaxHighlighting()
+        // Theme change overwrites textView.backgroundColor; re-apply
+        // the current translucency level so transparency persists.
+        reapplyCurrentAppearanceStyle()
     }
 
     // MARK: - File Actions
@@ -665,30 +748,51 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
     }
 
     private func applyWordWrap() {
-        guard let container = textView.textContainer,
-              let sv = textView.enclosingScrollView else { return }
+        applyWordWrap(to: textView, wrap: wordWrapEnabled)
+        // Apply the same setting to the second pane in split view.
+        if let secondTV = splitViewManager?.secondTextView {
+            applyWordWrap(to: secondTV, wrap: wordWrapEnabled)
+        }
+        // Force the layout manager to re-flow with the new container width
+        // and tell the line-number gutter to redraw — otherwise it keeps
+        // using the previous (pre-wrap) line-fragment positions.
+        if let lm = textView.layoutManager, let tc = textView.textContainer,
+           let ts = textView.textStorage {
+            lm.invalidateLayout(forCharacterRange: NSRange(location: 0, length: ts.length),
+                                actualCharacterRange: nil)
+            lm.ensureLayout(for: tc)
+        }
+        lineNumberGutter?.needsDisplay = true
+    }
 
-        if wordWrapEnabled {
+    private func applyWordWrap(to tv: NSTextView, wrap: Bool) {
+        guard let container = tv.textContainer,
+              let sv = tv.enclosingScrollView else { return }
+
+        if wrap {
             container.widthTracksTextView = false
-            textView.isHorizontallyResizable = false
+            tv.isHorizontallyResizable = false
             let w = sv.contentSize.width - container.lineFragmentPadding * 2
             container.containerSize = NSSize(width: w, height: CGFloat.greatestFiniteMagnitude)
-            textView.maxSize = NSSize(width: w, height: CGFloat.greatestFiniteMagnitude)
-            textView.frame.size.width = sv.contentSize.width
+            tv.maxSize = NSSize(width: w, height: CGFloat.greatestFiniteMagnitude)
+            tv.frame.size.width = sv.contentSize.width
             sv.hasHorizontalScroller = false
         } else {
             container.widthTracksTextView = false
-            textView.isHorizontallyResizable = true
+            tv.isHorizontallyResizable = true
             container.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
-            textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+            tv.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
             sv.hasHorizontalScroller = true
         }
     }
 
-    /// Called when window resizes to keep wrap width in sync
+    /// Called when window resizes to keep panel layout, split view and word
+    /// wrap in sync with the new window size.
     func windowDidResize() {
-        guard wordWrapEnabled else { return }
-        applyWordWrap()
+        relayoutPanels()
+        if wordWrapEnabled {
+            applyWordWrap()
+        }
     }
 
     // MARK: - Formatting marks (invisibles)
@@ -721,6 +825,60 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
 
     var showFormattingMarks: Bool {
         EditorSettings.showFormattingMarks
+    }
+
+    // MARK: - Window appearance (standard / transparency)
+
+    /// Apply the chosen window-chrome style. Safe to call repeatedly.
+    private func applyAppearanceStyle(_ style: AppearanceStyle) {
+        guard let window = window else { return }
+
+        let theme = ThemeManager.shared.currentTheme
+
+        switch style {
+        case .standard:
+            window.isOpaque = true
+            window.backgroundColor = .windowBackgroundColor
+            window.titlebarAppearsTransparent = false
+            window.titleVisibility = .visible
+            editorScrollView?.drawsBackground = true
+            editorScrollView?.contentView.drawsBackground = true
+            textView?.drawsBackground = true
+            textView?.backgroundColor = theme.background
+            tabBarView?.backgroundAlpha = 1.0
+            lineNumberGutter?.backgroundAlpha = 1.0
+
+        case .transparency:
+            // Subtle Terminal-style translucency: editor + chrome + title bar
+            // all tinted with the theme background at the user-chosen opacity.
+            let alpha = EditorSettings.transparencyAlpha
+            let tint = theme.background.withAlphaComponent(alpha)
+            window.isOpaque = false
+            // Paint the entire window chrome (incl. the transparent title bar
+            // area) with the same translucent theme colour.
+            window.backgroundColor = tint
+            window.titlebarAppearsTransparent = true
+            window.titleVisibility = .visible
+            editorScrollView?.drawsBackground = false
+            editorScrollView?.contentView.drawsBackground = false
+            // Let the window's tinted background show through the editor and
+            // its chrome so the whole window has a uniform translucency.
+            textView?.drawsBackground = false
+            textView?.backgroundColor = .clear
+            tabBarView?.backgroundAlpha = 0
+            lineNumberGutter?.backgroundAlpha = 0
+        }
+
+        window.contentView?.needsDisplay = true
+        textView?.needsDisplay = true
+        tabBarView?.needsDisplay = true
+        lineNumberGutter?.needsDisplay = true
+    }
+
+    /// Re-apply the current appearance after a theme change so the
+    /// translucent text-view background picks up the new theme colours.
+    private func reapplyCurrentAppearanceStyle() {
+        applyAppearanceStyle(EditorSettings.appearanceStyle)
     }
 
     // MARK: - Encoding

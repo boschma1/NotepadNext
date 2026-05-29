@@ -29,7 +29,7 @@ class MenuManager {
         let appMenu = NSMenu()
 
         appMenu.addItem(withTitle: "About NotepadMacMac",
-                        action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)),
+                        action: #selector(AppDelegate.showAbout(_:)),
                         keyEquivalent: "")
         appMenu.addItem(.separator())
 
@@ -245,6 +245,7 @@ class MenuManager {
                                          keyEquivalent: "I")
         formattingMarks.keyEquivalentModifierMask = [.command, .shift]
         viewMenu.addItem(formattingMarks)
+
         viewMenu.addItem(.separator())
 
         viewMenu.addItem(withTitle: "Folder as Workspace",

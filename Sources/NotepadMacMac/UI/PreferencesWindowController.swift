@@ -6,7 +6,7 @@ class PreferencesWindowController: NSWindowController {
 
     convenience init() {
         let window = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 540, height: 460),
+            contentRect: NSRect(x: 0, y: 0, width: 540, height: 540),
             styleMask: [.titled, .closable],
             backing: .buffered, defer: false
         )
@@ -92,12 +92,15 @@ class PreferencesWindowController: NSWindowController {
     private var fgColorWell: NSColorWell!
     private var bgColorWell: NSColorWell!
     private var themePopup: NSPopUpButton!
+    private var appearanceStylePopup: NSPopUpButton!
+    private var transparencySlider: NSSlider!
+    private var transparencyValueLabel: NSTextField!
 
     private func createAppearanceTab() -> NSTabViewItem {
         let tab = NSTabViewItem(identifier: "appearance")
         tab.label = "Appearance"
-        let view = NSView(frame: NSRect(x: 0, y: 0, width: 500, height: 400))
-        var y: CGFloat = 365
+        let view = NSView(frame: NSRect(x: 0, y: 0, width: 500, height: 480))
+        var y: CGFloat = 445
 
         // Theme selector
         let themeLabel = NSTextField(labelWithString: "Theme:")
@@ -177,6 +180,49 @@ class PreferencesWindowController: NSWindowController {
         bgColorWell.action = #selector(backgroundColorChanged(_:))
         view.addSubview(bgColorWell)
         y -= 40
+
+        let sepA = NSBox(frame: NSRect(x: 20, y: y, width: 460, height: 1))
+        sepA.boxType = .separator
+        view.addSubview(sepA)
+        y -= 20
+
+        // Window style (Standard / Transparency)
+        let styleLabel = NSTextField(labelWithString: "Window style:")
+        styleLabel.frame = NSRect(x: 20, y: y, width: 100, height: 20)
+        view.addSubview(styleLabel)
+
+        appearanceStylePopup = NSPopUpButton(frame: NSRect(x: 125, y: y - 2, width: 200, height: 24))
+        for style in AppearanceStyle.allCases {
+            appearanceStylePopup.addItem(withTitle: style.displayName)
+        }
+        if let idx = AppearanceStyle.allCases.firstIndex(of: EditorSettings.appearanceStyle) {
+            appearanceStylePopup.selectItem(at: idx)
+        }
+        appearanceStylePopup.target = self
+        appearanceStylePopup.action = #selector(appearanceStyleSelected(_:))
+        view.addSubview(appearanceStylePopup)
+        y -= 32
+
+        // Window opacity slider (only meaningful in Transparency mode but
+        // editable anytime so users can preview before switching).
+        let opacityLabel = NSTextField(labelWithString: "Window opacity:")
+        opacityLabel.frame = NSRect(x: 20, y: y, width: 110, height: 20)
+        view.addSubview(opacityLabel)
+
+        transparencySlider = NSSlider(value: Double(EditorSettings.transparencyAlpha),
+                                       minValue: Double(EditorSettings.minTransparencyAlpha),
+                                       maxValue: Double(EditorSettings.maxTransparencyAlpha),
+                                       target: self,
+                                       action: #selector(transparencySliderChanged(_:)))
+        transparencySlider.frame = NSRect(x: 130, y: y - 2, width: 240, height: 24)
+        transparencySlider.isContinuous = true
+        view.addSubview(transparencySlider)
+
+        transparencyValueLabel = NSTextField(labelWithString: percentString(EditorSettings.transparencyAlpha))
+        transparencyValueLabel.frame = NSRect(x: 380, y: y, width: 50, height: 20)
+        transparencyValueLabel.alignment = .right
+        view.addSubview(transparencyValueLabel)
+        y -= 36
 
         // Preview
         let sep3 = NSBox(frame: NSRect(x: 20, y: y, width: 460, height: 1))
@@ -262,6 +308,25 @@ class PreferencesWindowController: NSWindowController {
         ThemeManager.shared.currentTheme.background = sender.color
         ThemeManager.shared.applyTheme()
         updatePreview()
+    }
+
+    @objc private func appearanceStyleSelected(_ sender: NSPopUpButton) {
+        let idx = sender.indexOfSelectedItem
+        let all = AppearanceStyle.allCases
+        guard idx >= 0, idx < all.count else { return }
+        EditorSettings.appearanceStyle = all[idx]
+        NotificationCenter.default.post(name: .nmmAppearanceDidChange, object: nil)
+    }
+
+    @objc private func transparencySliderChanged(_ sender: NSSlider) {
+        let alpha = CGFloat(sender.doubleValue)
+        EditorSettings.transparencyAlpha = alpha
+        transparencyValueLabel?.stringValue = percentString(alpha)
+        NotificationCenter.default.post(name: .nmmAppearanceDidChange, object: nil)
+    }
+
+    private func percentString(_ alpha: CGFloat) -> String {
+        return "\(Int(round(alpha * 100)))%"
     }
 
     private func updateAppearanceControls() {

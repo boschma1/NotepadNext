@@ -199,6 +199,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func triggerAutoComplete(_ sender: Any?) { mainController.triggerAutoComplete() }
     @objc func showFindInFiles(_ sender: Any?) { mainController.showFindInFiles() }
     @objc func toggleFormattingMarks(_ sender: Any?) { mainController.toggleFormattingMarks() }
+    @objc func showAbout(_ sender: Any?) {
+        let credits = NSAttributedString(
+            string: "Developed by Markus Bosch",
+            attributes: [
+                .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
+                .foregroundColor: NSColor.labelColor,
+            ]
+        )
+        NSApp.orderFrontStandardAboutPanel(options: [.credits: credits])
+    }
     @objc func showPreferences(_ sender: Any?) { mainController.showPreferences() }
     @objc func runInTerminal(_ sender: Any?) { mainController.runInTerminal() }
     @objc func openInDefaultApp(_ sender: Any?) { mainController.openInDefaultApp() }

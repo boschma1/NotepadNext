@@ -8,6 +8,27 @@ comment, or pick one up.
 The active milestone is
 [**v1.1.0**](https://github.com/boschma1/NotepadMacMac/milestone/1).
 
+## Shipped in v1.2.0
+
+See the [v1.2.0 release notes](https://github.com/boschma1/NotepadMacMac/releases/tag/v1.2.0)
+for the full feature list. Highlights:
+
+- [**Universal (arm64 + x86_64) build**](https://github.com/boschma1/NotepadMacMac/issues/1)
+  — release binary now runs natively on Intel Macs too
+- Window transparency / opacity (Settings → Appearance)
+- Several split-view fixes (right pane scrollable; word-wrap syncs both
+  panes; window resize splits width equally)
+- `=rand(p)` / `=rand(p, s)` Lorem Ipsum expansion on Enter (Word-style)
+- "Developed by Markus Bosch" credit in the About panel
+- Line-number gutter realigns correctly when toggling word wrap
+
+## Shipped in v1.1.2
+
+See the [v1.1.2 release notes](https://github.com/boschma1/NotepadMacMac/releases/tag/v1.1.2).
+
+- Working Find & Replace (Cmd+F)
+- Show Formatting Characters toggle (Cmd+Shift+I)
+
 ## Shipped in v1.0.0
 
 See the [v1.0.0 release notes](https://github.com/boschma1/NotepadMacMac/releases/tag/v1.0.0)
@@ -26,7 +47,7 @@ for the full feature list. Highlights:
 
 | #   | Item                                                                                          | Area          |
 | --- | --------------------------------------------------------------------------------------------- | ------------- |
-| [#1](https://github.com/boschma1/NotepadMacMac/issues/1) | Universal (arm64 + x86_64) build           | Distribution  |
+| [#1](https://github.com/boschma1/NotepadMacMac/issues/1) | Universal (arm64 + x86_64) build (✅ shipped in v1.2.0) | Distribution  |
 | [#2](https://github.com/boschma1/NotepadMacMac/issues/2) | Developer ID signing + notarization        | Distribution  |
 | [#3](https://github.com/boschma1/NotepadMacMac/issues/3) | Homebrew cask                              | Distribution  |
 | [#4](https://github.com/boschma1/NotepadMacMac/issues/4) | Document the plugin API                    | Plugins       |
@@ -35,8 +56,7 @@ for the full feature list. Highlights:
 
 ### Notes
 
-- **Universal binary** unblocks Intel Mac users; current release is
-  Apple Silicon only.
+- **Universal binary** unblocks Intel Mac users; shipped in v1.2.0.
 - **Signing + notarization** removes the Gatekeeper warning on first
   launch and is a prerequisite for the Homebrew cask.
 - **Plugin API documentation** turns the existing `PluginManager`
