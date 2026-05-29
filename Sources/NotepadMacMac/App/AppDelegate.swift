@@ -198,6 +198,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func showHashTools(_ sender: Any?) { mainController.showHashTools() }
     @objc func triggerAutoComplete(_ sender: Any?) { mainController.triggerAutoComplete() }
     @objc func showFindInFiles(_ sender: Any?) { mainController.showFindInFiles() }
+    @objc func toggleFormattingMarks(_ sender: Any?) { mainController.toggleFormattingMarks() }
     @objc func showPreferences(_ sender: Any?) { mainController.showPreferences() }
     @objc func runInTerminal(_ sender: Any?) { mainController.runInTerminal() }
     @objc func openInDefaultApp(_ sender: Any?) { mainController.openInDefaultApp() }
@@ -233,5 +234,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if alert.runModal() == .alertFirstButtonReturn, let n = Int(field.stringValue), n > 0 {
             MacroEngine.shared.playbackMultiple(times: n, on: mainController.textView)
         }
+    }
+
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem.action == #selector(toggleFormattingMarks(_:)) {
+            menuItem.state = EditorSettings.showFormattingMarks ? .on : .off
+        }
+        return true
     }
 }

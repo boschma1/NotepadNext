@@ -240,6 +240,11 @@ class MenuManager {
         viewMenu.addItem(withTitle: "Word Wrap",
                          action: #selector(AppDelegate.toggleWordWrap(_:)),
                          keyEquivalent: "")
+        let formattingMarks = NSMenuItem(title: "Show Formatting Characters",
+                                         action: #selector(AppDelegate.toggleFormattingMarks(_:)),
+                                         keyEquivalent: "I")
+        formattingMarks.keyEquivalentModifierMask = [.command, .shift]
+        viewMenu.addItem(formattingMarks)
         viewMenu.addItem(.separator())
 
         viewMenu.addItem(withTitle: "Folder as Workspace",

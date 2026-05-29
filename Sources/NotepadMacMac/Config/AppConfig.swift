@@ -16,6 +16,16 @@ struct AppConfig {
     }
 }
 
+/// Lightweight user-defaults-backed editor view settings.
+enum EditorSettings {
+    private static let showFormattingMarksKey = "NMM_ShowFormattingMarks"
+
+    static var showFormattingMarks: Bool {
+        get { UserDefaults.standard.bool(forKey: showFormattingMarksKey) }
+        set { UserDefaults.standard.set(newValue, forKey: showFormattingMarksKey) }
+    }
+}
+
 extension Array {
     subscript(safe index: Int) -> Element? {
         return indices.contains(index) ? self[index] : nil

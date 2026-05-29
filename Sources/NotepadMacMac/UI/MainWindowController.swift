@@ -23,6 +23,7 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
     private var shortcutMapperController: ShortcutMapperController?
     private var pluginManagerController: PluginManagerController?
     private var udlEditorController: UDLEditorController?
+    private(set) var invisiblesLayoutManager: InvisiblesLayoutManager?
 
     // Lightweight wrapper so the rest of the code can use editorView.text / .language
     var editorView: EditorViewAccessor!
@@ -77,6 +78,8 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
         textView.textContainer?.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         textView.delegate = self
+
+        installInvisiblesLayoutManager()
 
         editorScrollView.documentView = textView
 
@@ -686,6 +689,38 @@ class MainWindowController: NSWindowController, NSTextViewDelegate {
     func windowDidResize() {
         guard wordWrapEnabled else { return }
         applyWordWrap()
+    }
+
+    // MARK: - Formatting marks (invisibles)
+
+    /// Swap the text view's default NSLayoutManager for our custom
+    /// `InvisiblesLayoutManager`, preserving the existing text storage and
+    /// text container. Done in-place so NSTextView keeps the wiring it
+    /// configured in its own `init(frame:)`.
+    private func installInvisiblesLayoutManager() {
+        guard let storage = textView.textStorage,
+              let oldLM = textView.layoutManager,
+              let container = textView.textContainer
+        else { return }
+
+        let invisLM = InvisiblesLayoutManager()
+        oldLM.removeTextContainer(at: 0)
+        storage.removeLayoutManager(oldLM)
+        storage.addLayoutManager(invisLM)
+        invisLM.addTextContainer(container)
+        invisLM.showsFormattingMarks = EditorSettings.showFormattingMarks
+        invisiblesLayoutManager = invisLM
+    }
+
+    func toggleFormattingMarks() {
+        let newValue = !EditorSettings.showFormattingMarks
+        EditorSettings.showFormattingMarks = newValue
+        invisiblesLayoutManager?.showsFormattingMarks = newValue
+        textView.needsDisplay = true
+    }
+
+    var showFormattingMarks: Bool {
+        EditorSettings.showFormattingMarks
     }
 
     // MARK: - Encoding

@@ -25,6 +25,33 @@ class PlainTextView: NSTextView {
         deleteBackward(sender)
     }
 
+    // MARK: - Belt-and-suspenders key equivalents
+
+    /// Some macOS configurations don't forward Cmd+F / Cmd+H from the text view
+    /// to the main menu's key-equivalent dispatch when the find panel uses a
+    /// non-standard responder chain. Catch them here and route via the
+    /// application's responder chain so the floating Find & Replace panel
+    /// (AppDelegate.showFindReplace:) always opens.
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if event.type == .keyDown,
+           event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
+           let chars = event.charactersIgnoringModifiers?.lowercased() {
+            switch chars {
+            case "f", "h":
+                if NSApp.sendAction(Selector(("showFindReplace:")), to: nil, from: self) {
+                    return true
+                }
+            case "g":
+                if NSApp.sendAction(Selector(("showGoToLine:")), to: nil, from: self) {
+                    return true
+                }
+            default:
+                break
+            }
+        }
+        return super.performKeyEquivalent(with: event)
+    }
+
     // MARK: - Cmd+Click to open URLs
 
     override func mouseDown(with event: NSEvent) {
