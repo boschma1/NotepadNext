@@ -150,13 +150,13 @@ fi
 echo "→ git commit…"
 git commit -m "$COMMIT_MESSAGE"
 
-echo "→ git tag $TAG…"
+echo "→ git tag ${TAG}…"
 git tag -a "$TAG" -m "$COMMIT_MESSAGE"
 
 echo "→ git push origin main…"
 git push origin main
 
-echo "→ git push origin $TAG…"
+echo "→ git push origin ${TAG}…"
 git push origin "$TAG"
 
 # --- Build release zips ------------------------------------------------------
@@ -178,7 +178,7 @@ else
     GH_ARGS+=( "--notes" "$COMMIT_MESSAGE" )
 fi
 
-echo "→ gh release create $TAG…"
+echo "→ gh release create ${TAG}…"
 gh release create "$TAG" "${GH_ARGS[@]}" "$VERSIONED_ZIP" "$LATEST_ZIP"
 
 REPO_URL="$(git remote get-url origin | sed 's/\.git$//')"
